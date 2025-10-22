@@ -1,0 +1,60 @@
+# Node modules
+node_modules
+npm-debug.log
+pnpm-debug.log
+
+# Build output
+dist
+build
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+test
+coverage
+*.spec.ts
+*.e2e-spec.ts
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Temporary files
+tmp
+temp
+*.tmp
+*.log
+
+# Prisma
+prisma/migrations/*.sql
+
+# Generated files (will be regenerated in container)
+generated
