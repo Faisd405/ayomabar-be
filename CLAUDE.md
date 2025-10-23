@@ -145,7 +145,6 @@ src/core/{module}/
 Applied in `AppModule.configure()`:
 1. `LoggerMiddleware` - Request/response logging
 2. `CorsMiddleware` - CORS handling
-3. `StaticTokenAuthMiddleware` - Authentication (applies to `/api/*` only)
 
 ### Swagger Documentation
 

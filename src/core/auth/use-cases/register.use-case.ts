@@ -1,13 +1,13 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma/prisma.service';
-import { CreateUserDto } from '../dto/create-user.dto';
+import { RegisterDto } from '../dto/register.dto';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
-export class CreateUserUseCase {
+export class RegisterUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(data: CreateUserDto) {
+  async execute(data: RegisterDto) {
     // Check if user with email already exists
     const existingUserByEmail = await this.prisma.user.findUnique({
       where: { email: data.email },
@@ -26,21 +26,18 @@ export class CreateUserUseCase {
       throw new ConflictException('User with this username already exists');
     }
 
-    // Hash password if provided
-    let hashedPassword: string | undefined;
-    if (data.password) {
-      const saltRounds = 10;
-      hashedPassword = await bcrypt.hash(data.password, saltRounds);
-    }
+    // Hash password with bcryptjs
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(data.password, saltRounds);
 
     // Create new user
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         username: data.username,
         password: hashedPassword,
-        roles: data.roles || ['user'],
+        roles: ['user'],
       },
       select: {
         id: true,
@@ -50,12 +47,9 @@ export class CreateUserUseCase {
         roles: true,
         createdAt: true,
         updatedAt: true,
-        _count: {
-          select: {
-            notes: true,
-          },
-        },
       },
     });
+
+    return user;
   }
 }

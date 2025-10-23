@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma/prisma.service';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UpdateUserUseCase {
@@ -46,7 +46,8 @@ export class UpdateUserUseCase {
     // Hash password if provided
     let hashedPassword: string | undefined;
     if (data.password) {
-      hashedPassword = await argon2.hash(data.password);
+      const saltRounds = 10;
+      hashedPassword = await bcrypt.hash(data.password, saltRounds);
     }
 
     // Update user

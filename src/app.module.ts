@@ -11,7 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerMiddleware, CorsMiddleware } from './common/middleware';
 import { UserModule } from './core/user/user.module';
 import { NoteModule } from './core/note/note.module';
-import { StaticTokenAuthMiddleware } from './common/middleware/static-token-auth.middleware';
+import { AuthModule } from './core/auth/auth.module';
 
 @Module({
   imports: [
@@ -19,6 +19,7 @@ import { StaticTokenAuthMiddleware } from './common/middleware/static-token-auth
       isGlobal: true,
       load: [appConfig],
     }),
+    AuthModule,
     UserModule,
     NoteModule,
   ],
@@ -39,10 +40,6 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware, CorsMiddleware).forRoutes({
       path: '/*',
-      method: RequestMethod.ALL,
-    });
-    consumer.apply(StaticTokenAuthMiddleware).forRoutes({
-      path: '/api/*',
       method: RequestMethod.ALL,
     });
   }
