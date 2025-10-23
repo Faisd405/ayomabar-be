@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a NestJS-based backend API for a Roblox game called "Danau". It provides user management, feedback system, and secure communication between Roblox games and the backend server.
+This is a NestJS application using Prisma ORM for database interactions. It follows a Clean Architecture pattern with a focus on Use Case driven design. Key features include:
 
 ## Development Commands
 
@@ -65,7 +65,7 @@ src/
 │       ├── {module}.service.ts
 │       └── {module}.module.ts
 ├── common/            # Shared utilities
-│   ├── services/      # Shared services (Prisma, RobloxSecurity)
+│   ├── services/      # Shared services (Prisma)
 │   ├── middleware/    # Request middleware (Auth, CORS, Logger)
 │   ├── guards/        # Route guards
 │   ├── decorators/    # Custom decorators
