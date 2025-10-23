@@ -135,10 +135,8 @@ src/core/{module}/
 
 ### Authentication & Security
 
-**Static Token Authentication**:
-- All `/api/*` routes protected by `StaticTokenAuthMiddleware`
-- Token stored in `STATIC_TOKEN` environment variable
-- Clients send: `Authorization: Bearer {token}`
+- JWT-based authentication with Passport.js
+- Passwords hashed with bcryptjs
 
 ### Middleware Order
 
@@ -164,7 +162,6 @@ APP_PORT              # Server port (default: 3003)
 APP_VERSION           # API version (default: "1")
 APP_PREFIX            # API prefix (default: "api")
 NODE_ENV              # Environment (development/production)
-STATIC_TOKEN          # Authentication token for API access
 ```
 
 ## Important Notes
