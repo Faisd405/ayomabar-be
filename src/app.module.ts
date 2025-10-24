@@ -13,6 +13,8 @@ import { UserModule } from './core/user/user.module';
 import { NoteModule } from './core/note/note.module';
 import { AuthModule } from './core/auth/auth.module';
 import { HealthModule } from './health/health.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -20,13 +22,36 @@ import { HealthModule } from './health/health.module';
       isGlobal: true,
       load: [appConfig],
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000, // 1 second
+        limit: 3, // 3 requests per second
+      },
+      {
+        name: 'medium',
+        ttl: 10000, // 10 seconds
+        limit: 20, // 20 requests per 10 seconds
+      },
+      {
+        name: 'long',
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per minute
+      },
+    ]),
     AuthModule,
     UserModule,
     NoteModule,
     HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   static port: number;
