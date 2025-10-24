@@ -5,6 +5,7 @@ import { Logger, VersioningType } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { swaggerConfig } from '@config/swagger.config';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { AllExceptionsFilter } from './common/filters';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +15,7 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
   app.useGlobalPipes(new ZodValidationPipe());
+  app.useGlobalFilters(new AllExceptionsFilter());
   swaggerConfig(app, AppModule.appVersion, AppModule.environment);
   app.use(helmet());
   await app.listen(AppModule.port);
