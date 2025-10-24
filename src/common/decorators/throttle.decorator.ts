@@ -9,7 +9,7 @@ export interface ThrottleOptions {
 }
 
 export const Throttle = (options: ThrottleOptions) => {
-  return (target: any, key?: string | symbol, descriptor?: PropertyDescriptor) => {
+  return (target: any, key: string | symbol, descriptor: PropertyDescriptor) => {
     SetMetadata(THROTTLE_LIMIT_KEY, options.limit)(target, key, descriptor);
     SetMetadata(THROTTLE_TTL_KEY, options.ttl)(target, key, descriptor);
   };
