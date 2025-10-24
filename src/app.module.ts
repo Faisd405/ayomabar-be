@@ -12,6 +12,7 @@ import { LoggerMiddleware, CorsMiddleware } from './common/middleware';
 import { UserModule } from './core/user/user.module';
 import { NoteModule } from './core/note/note.module';
 import { AuthModule } from './core/auth/auth.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AuthModule } from './core/auth/auth.module';
     AuthModule,
     UserModule,
     NoteModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

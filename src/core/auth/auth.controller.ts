@@ -53,10 +53,6 @@ export class AuthControllerV1 {
       },
     },
   })
-  @ApiResponse({
-    status: 409,
-    description: 'User with this email or username already exists',
-  })
   async register(@Body() registerDto: RegisterDto) {
     const result = await this.authService.register(registerDto);
     return successResponse(
@@ -94,10 +90,6 @@ export class AuthControllerV1 {
       },
     },
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Invalid credentials',
-  })
   async login(@Body() loginDto: LoginDto) {
     const result = await this.authService.login(loginDto);
     return successResponse(result, 'User logged in successfully');
@@ -123,10 +115,6 @@ export class AuthControllerV1 {
         },
       },
     },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Invalid or expired refresh token',
   })
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     const result = await this.authService.refreshToken(
@@ -158,10 +146,6 @@ export class AuthControllerV1 {
         },
       },
     },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
   })
   async getCurrentUser(@CurrentUser() user: any) {
     return successResponse(user, 'Current user retrieved successfully');
