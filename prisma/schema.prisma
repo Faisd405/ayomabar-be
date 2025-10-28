@@ -15,28 +15,92 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  username  String   @unique
-  password  String?
-  roles     String[] @default(["user"])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  notes     Note[]
+
+  name     String
+  email    String   @unique
+  username String   @unique
+  password String?
+  roles    String[] @default(["user"])
+
+  avatar    String?
+  bio       String?
+  location  String?
+  playstyle String? @default("casual")
+  socials   Json?
+
+  notes        Note[]
+  Match        Match[]
+  MatchRequest MatchRequest[]
+
   @@map("users")
 }
 
 model Note {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  content   String
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId  Int
+  content String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("notes")
+}
+
+model Game {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  title       String
+  genre       String?
+  platform    String?
+  releaseDate DateTime?
+  Match       Match[]
+
+  @@map("games")
+}
+
+model Match {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  gameId      Int
+  userId      Int /// The user who created the match
+  maxPlayers  Int       @default(1)
+  status      String    @default("open") // e.g., open, closed, in-progress, completed
+  scheduledAt DateTime?
+
+  game         Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  MatchRequest MatchRequest[]
+
+  @@map("matches")
+}
+
+model MatchRequest {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  matchId Int
+  /// The user who requested to join the match
+  userId  Int
+  status  String  @default("pending") // e.g., pending, accepted, rejected
+  isHost  Boolean @default(false)
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("match_requests")
 }
