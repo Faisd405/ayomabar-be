@@ -18,6 +18,9 @@ import { successResponse } from 'src/utils/response.utils';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
+import { RolesGuard } from '@src/common/guards';
 
 @ApiTags('auth')
 @Controller({ path: 'auth', version: '1' })
@@ -123,8 +126,8 @@ export class AuthControllerV1 {
     return successResponse(result, 'Token refreshed successfully');
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('me')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get current user',

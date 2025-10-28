@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { Role } from 'src/common/enums/role.enum';
 
 export const CreateUserSchema = z.object({
   name: z
@@ -28,10 +29,10 @@ export const CreateUserSchema = z.object({
     .optional()
     .describe('The password of the user (optional)'),
   roles: z
-    .array(z.string())
-    .default(['user'])
+    .array(z.nativeEnum(Role))
+    .default([Role.USER])
     .optional()
-    .describe('User roles'),
+    .describe('User roles (superadmin, admin, or user)'),
 });
 
 export class CreateUserDto extends createZodDto(CreateUserSchema) {}

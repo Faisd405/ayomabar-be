@@ -6,6 +6,28 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
+  // Create superadmin user
+  const superadminPassword = await bcrypt.hash('superadmin123', 10);
+  
+  const superadmin = await prisma.user.upsert({
+    where: { email: 'superadmin@example.com' },
+    update: {},
+    create: {
+      name: 'Super Admin',
+      email: 'superadmin@example.com',
+      username: 'superadmin',
+      password: superadminPassword,
+      roles: ['superadmin', 'admin', 'user'],
+    },
+  });
+
+  console.log('✅ Created superadmin user:', {
+    id: superadmin.id,
+    email: superadmin.email,
+    username: superadmin.username,
+    roles: superadmin.roles,
+  });
+
   // Create admin user
   const adminPassword = await bcrypt.hash('admin123', 10);
   
@@ -86,9 +108,30 @@ async function main() {
 
   console.log(`✅ Created ${adminNotes.count} sample notes for admin user`);
 
+  // Create sample notes for superadmin
+  const superadminNotes = await prisma.note.createMany({
+    data: [
+      {
+        content: 'Superadmin note: Full system access granted.',
+        userId: superadmin.id,
+      },
+      {
+        content: 'Monitor system health and user activities regularly.',
+        userId: superadmin.id,
+      },
+    ],
+  });
+
+  console.log(`✅ Created ${superadminNotes.count} sample notes for superadmin user`);
+
   console.log('\n🎉 Database seeding completed successfully!');
   console.log('\n📝 Test Credentials:');
   console.log('━'.repeat(50));
+  console.log('Superadmin User:');
+  console.log('  Email: superadmin@example.com');
+  console.log('  Password: superadmin123');
+  console.log('  Roles: superadmin, admin, user');
+  console.log('');
   console.log('Admin User:');
   console.log('  Email: admin@example.com');
   console.log('  Password: admin123');
