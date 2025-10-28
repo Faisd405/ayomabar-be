@@ -12,6 +12,7 @@ import { LoggerMiddleware, CorsMiddleware } from './common/middleware';
 import { UserModule } from './core/user/user.module';
 import { NoteModule } from './core/note/note.module';
 import { AuthModule } from './core/auth/auth.module';
+import { GameModule } from './core/game/game.module';
 import { HealthModule } from './health/health.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -43,6 +44,7 @@ import { RolesGuard } from './common/guards';
     AuthModule,
     UserModule,
     NoteModule,
+    GameModule,
     HealthModule,
   ],
   controllers: [AppController],
