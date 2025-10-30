@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma/prisma.service';
-import { GetMatchesListDto } from '../dto/get-matches-list.dto';
+import { GetRoomsListDto } from '../dto/get-rooms-list.dto';
 import { Prisma } from 'generated/prisma';
 
 @Injectable()
-export class GetMatchesListUseCase {
+export class GetRoomsListUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(query: GetMatchesListDto) {
+  async execute(query: GetRoomsListDto) {
     const { page, limit, gameId, userId, status, sortBy, sortOrder } = query;
 
     // Calculate pagination
@@ -15,7 +15,7 @@ export class GetMatchesListUseCase {
     const take = limit;
 
     // Build where clause
-    const where: Prisma.MatchWhereInput = {
+    const where: Prisma.RoomWhereInput = {
       deletedAt: null,
       ...(gameId && { gameId }),
       ...(userId && { userId }),
@@ -23,13 +23,13 @@ export class GetMatchesListUseCase {
     };
 
     // Build order by clause
-    const orderBy: Prisma.MatchOrderByWithRelationInput = {
+    const orderBy: Prisma.RoomOrderByWithRelationInput = {
       [sortBy]: sortOrder,
     };
 
     // Execute queries
-    const [matches, total] = await Promise.all([
-      this.prisma.match.findMany({
+    const [rooms, total] = await Promise.all([
+      this.prisma.room.findMany({
         where,
         orderBy,
         skip,
@@ -51,7 +51,7 @@ export class GetMatchesListUseCase {
               avatar: true,
             },
           },
-          MatchRequest: {
+          RoomRequest: {
             where: {
               deletedAt: null,
               status: 'accepted',
@@ -64,13 +64,13 @@ export class GetMatchesListUseCase {
           },
         },
       }),
-      this.prisma.match.count({ where }),
+      this.prisma.room.count({ where }),
     ]);
 
-    // Add participants count to each match
-    const matchesWithCount = matches.map((match) => ({
-      ...match,
-      participantsCount: match.MatchRequest.length,
+    // Add participants count to each room
+    const roomsWithCount = rooms.map((room) => ({
+      ...room,
+      participantsCount: room.RoomRequest.length,
     }));
 
     // Calculate pagination metadata
@@ -79,7 +79,7 @@ export class GetMatchesListUseCase {
     const hasPreviousPage = page > 1;
 
     return {
-      data: matchesWithCount,
+      data: roomsWithCount,
       meta: {
         total,
         page,

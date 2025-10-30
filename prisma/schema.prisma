@@ -32,9 +32,9 @@ model User {
   playstyle String? @default("casual")
   socials   Json?
 
-  notes        Note[]
-  Match        Match[]
-  MatchRequest MatchRequest[]
+  notes       Note[]
+  Room        Room[]
+  RoomRequest RoomRequest[]
 
   @@map("users")
 }
@@ -63,62 +63,64 @@ model Game {
   genre       String?
   platform    String?
   releaseDate DateTime?
-  Match       Match[]
+  Room        Room[]
+  Rank        Rank[]
 
   @@map("games")
 }
 
 model Rank {
-  id          Int      @id @default(autoincrement())
-  gameId      Int
-  name        String
-  tier        Int?     // optional sub-rank, e.g. I, II, III
-  orderIndex  Int      // rank order lowest → highest
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  gameId     Int
+  name       String
+  tier       Int? // optional sub-rank, e.g. I, II, III
+  orderIndex Int // rank order lowest → highest
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  game Game @relation(fields: [gameId], references: [id])
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
-  @@index([gameId])
   @@unique([gameId, name, tier]) // avoid duplicate rank tier per game
+  @@index([gameId])
 }
 
-model Match {
+model Room {
   id        Int       @id @default(autoincrement())
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   gameId      Int
-  userId      Int /// The user who created the match
-  maxPlayers  Int       @default(1)
-  // e.g., public, private (invite-only), private (host select), private (first come first served)
-  type        String    @default("public") 
-  // e.g., open, closed, in-progress, completed
-  status      String    @default("open") 
+  userId      Int // The user who created the room
+  minPlayers  Int       @default(1)
+  maxPlayers  Int       @default(1) // Need Player
+  rankMin     Int?
+  rankMax     Int?
+  typePlay    String    @default("casual") // casual, competitive, custom, tournament
+  roomType    String    @default("public") // public, private (invite-only), private (host select), private (first come first served)
+  status      String    @default("open") // open, closed, in-progress, completed
   scheduledAt DateTime?
 
-  game         Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  MatchRequest MatchRequest[]
+  game        Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  RoomRequest RoomRequest[]
 
-  @@map("matches")
+  @@map("rooms")
 }
 
-model MatchRequest {
+model RoomRequest {
   id        Int       @id @default(autoincrement())
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  matchId Int
-  /// The user who requested to join the match
-  userId  Int
-  status  String  @default("pending") // e.g., pending, accepted, rejected
-  isHost  Boolean @default(false)
+  roomId Int
+  userId Int // The user who requested to join the room
+  status String  @default("pending") // pending, accepted, rejected
+  isHost Boolean @default(false)
 
-  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("match_requests")
+  @@map("room_requests")
 }

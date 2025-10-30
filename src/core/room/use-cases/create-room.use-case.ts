@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma/prisma.service';
-import { CreateMatchDto } from '../dto/create-match.dto';
+import { CreateRoomDto } from '../dto/create-room.dto';
 
 @Injectable()
-export class CreateMatchUseCase {
+export class CreateRoomUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(userId: number, data: CreateMatchDto) {
+  async execute(userId: number, data: CreateRoomDto) {
     // Check if game exists
     const game = await this.prisma.game.findFirst({
       where: {
@@ -19,8 +19,8 @@ export class CreateMatchUseCase {
       throw new NotFoundException('Game not found');
     }
 
-    // Create new match
-    const match = await this.prisma.match.create({
+    // Create new room
+    const room = await this.prisma.room.create({
       data: {
         gameId: data.gameId,
         userId,
@@ -48,16 +48,16 @@ export class CreateMatchUseCase {
       },
     });
 
-    // Automatically create a match request for the creator as host
-    await this.prisma.matchRequest.create({
+    // Automatically create a room request for the creator as host
+    await this.prisma.roomRequest.create({
       data: {
-        matchId: match.id,
+        roomId: room.id,
         userId,
         status: 'accepted',
         isHost: true,
       },
     });
 
-    return match;
+    return room;
   }
 }

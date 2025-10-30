@@ -1,27 +1,27 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma/prisma.service';
-import { UpdateMatchDto } from '../dto/update-match.dto';
+import { UpdateRoomDto } from '../dto/update-room.dto';
 
 @Injectable()
-export class UpdateMatchUseCase {
+export class UpdateRoomUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(userId: number, matchId: number, data: UpdateMatchDto) {
-    // Check if match exists
-    const existingMatch = await this.prisma.match.findFirst({
+  async execute(userId: number, roomId: number, data: UpdateRoomDto) {
+    // Check if room exists
+    const existingRoom = await this.prisma.room.findFirst({
       where: {
-        id: matchId,
+        id: roomId,
         deletedAt: null,
       },
     });
 
-    if (!existingMatch) {
-      throw new NotFoundException('Match not found');
+    if (!existingRoom) {
+      throw new NotFoundException('Room not found');
     }
 
-    // Check if user is the creator of the match
-    if (existingMatch.userId !== userId) {
-      throw new ForbiddenException('You are not authorized to update this match');
+    // Check if user is the creator of the room
+    if (existingRoom.userId !== userId) {
+      throw new ForbiddenException('You are not authorized to update this room');
     }
 
     // If gameId is being updated, check if the game exists
@@ -38,9 +38,9 @@ export class UpdateMatchUseCase {
       }
     }
 
-    // Update match
-    return this.prisma.match.update({
-      where: { id: matchId },
+    // Update room
+    return this.prisma.room.update({
+      where: { id: roomId },
       data: {
         ...(data.gameId && { gameId: data.gameId }),
         ...(data.maxPlayers !== undefined && { maxPlayers: data.maxPlayers }),

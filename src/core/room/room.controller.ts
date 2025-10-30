@@ -17,35 +17,35 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { MatchService } from './match.service';
+import { RoomService } from './room.service';
 import { successResponse } from 'src/utils/response.utils';
 import {
-  CreateMatchDto,
-  UpdateMatchDto,
-  GetMatchesListDto,
+  CreateRoomDto,
+  UpdateRoomDto,
+  GetRoomsListDto,
 } from './dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/core/auth/decorators/current-user.decorator';
 
-@ApiTags('match')
-@Controller({ path: 'match', version: '1' })
-export class MatchControllerV1 {
-  constructor(private readonly matchService: MatchService) {}
+@ApiTags('room')
+@Controller({ path: 'room', version: '1' })
+export class RoomControllerV1 {
+  constructor(private readonly roomService: RoomService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Create a new match',
-    description: 'Creates a new match with the provided information. Requires authentication.',
+    summary: 'Create a new room',
+    description: 'Creates a new room with the provided information. Requires authentication.',
   })
   @ApiResponse({
     status: 201,
-    description: 'Match created successfully',
+    description: 'Room created successfully',
     schema: {
       example: {
         success: true,
-        message: 'Match created successfully',
+        message: 'Room created successfully',
         data: {
           id: 1,
           gameId: 1,
@@ -82,28 +82,28 @@ export class MatchControllerV1 {
   })
   async create(
     @CurrentUser() user: any,
-    @Body() createMatchDto: CreateMatchDto,
+    @Body() createRoomDto: CreateRoomDto,
   ) {
-    const match = await this.matchService.createMatch(user.id, createMatchDto);
+    const room = await this.roomService.createRoom(user.id, createRoomDto);
     return successResponse(
-      match,
-      'Match created successfully',
+      room,
+      'Room created successfully',
       HttpStatus.CREATED,
     );
   }
 
   @Get()
   @ApiOperation({
-    summary: 'Get a list of matches',
-    description: 'Retrieves a paginated list of matches with optional filtering and sorting.',
+    summary: 'Get a list of rooms',
+    description: 'Retrieves a paginated list of rooms with optional filtering and sorting.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Matches retrieved successfully',
+    description: 'Rooms retrieved successfully',
     schema: {
       example: {
         success: true,
-        message: 'Matches retrieved successfully',
+        message: 'Rooms retrieved successfully',
         data: {
           data: [
             {
@@ -143,23 +143,23 @@ export class MatchControllerV1 {
       },
     },
   })
-  async findAll(@Query() query: GetMatchesListDto) {
-    const matches = await this.matchService.getMatchesList(query);
-    return successResponse(matches, 'Matches retrieved successfully');
+  async findAll(@Query() query: GetRoomsListDto) {
+    const rooms = await this.roomService.getRoomsList(query);
+    return successResponse(rooms, 'Rooms retrieved successfully');
   }
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Get a match by ID',
-    description: 'Retrieves detailed information about a specific match including participants.',
+    summary: 'Get a room by ID',
+    description: 'Retrieves detailed information about a specific room including participants.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Match retrieved successfully',
+    description: 'Room retrieved successfully',
     schema: {
       example: {
         success: true,
-        message: 'Match retrieved successfully',
+        message: 'Room retrieved successfully',
         data: {
           id: 1,
           gameId: 1,
@@ -188,7 +188,7 @@ export class MatchControllerV1 {
           participants: [
             {
               id: 1,
-              matchId: 1,
+              roomId: 1,
               userId: 1,
               status: 'accepted',
               isHost: true,
@@ -207,27 +207,27 @@ export class MatchControllerV1 {
   })
   @ApiResponse({
     status: 404,
-    description: 'Match not found',
+    description: 'Room not found',
   })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    const match = await this.matchService.getMatchById(id);
-    return successResponse(match, 'Match retrieved successfully');
+    const room = await this.roomService.getRoomById(id);
+    return successResponse(room, 'Room retrieved successfully');
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Update a match',
-    description: 'Updates an existing match. Only the creator can update the match.',
+    summary: 'Update a room',
+    description: 'Updates an existing room. Only the creator can update the room.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Match updated successfully',
+    description: 'Room updated successfully',
     schema: {
       example: {
         success: true,
-        message: 'Match updated successfully',
+        message: 'Room updated successfully',
         data: {
           id: 1,
           gameId: 1,
@@ -256,11 +256,11 @@ export class MatchControllerV1 {
   })
   @ApiResponse({
     status: 404,
-    description: 'Match not found',
+    description: 'Room not found',
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - Only the match creator can update',
+    description: 'Forbidden - Only the room creator can update',
   })
   @ApiResponse({
     status: 401,
@@ -269,28 +269,28 @@ export class MatchControllerV1 {
   async update(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateMatchDto: UpdateMatchDto,
+    @Body() updateRoomDto: UpdateRoomDto,
   ) {
-    const match = await this.matchService.updateMatch(user.id, id, updateMatchDto);
-    return successResponse(match, 'Match updated successfully');
+    const room = await this.roomService.updateRoom(user.id, id, updateRoomDto);
+    return successResponse(room, 'Room updated successfully');
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Delete a match',
-    description: 'Soft deletes a match from the system. Only the creator can delete the match.',
+    summary: 'Delete a room',
+    description: 'Soft deletes a room from the system. Only the creator can delete the room.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Match deleted successfully',
+    description: 'Room deleted successfully',
     schema: {
       example: {
         success: true,
-        message: 'Match deleted successfully',
+        message: 'Room deleted successfully',
         data: {
-          message: 'Match deleted successfully',
+          message: 'Room deleted successfully',
         },
         statusCode: 200,
       },
@@ -298,11 +298,11 @@ export class MatchControllerV1 {
   })
   @ApiResponse({
     status: 404,
-    description: 'Match not found',
+    description: 'Room not found',
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - Only the match creator can delete',
+    description: 'Forbidden - Only the room creator can delete',
   })
   @ApiResponse({
     status: 401,
@@ -312,7 +312,7 @@ export class MatchControllerV1 {
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    const result = await this.matchService.deleteMatch(user.id, id);
-    return successResponse(result, 'Match deleted successfully');
+    const result = await this.roomService.deleteRoom(user.id, id);
+    return successResponse(result, 'Room deleted successfully');
   }
 }

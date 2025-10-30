@@ -2,11 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/common/services/prisma/prisma.service';
 
 @Injectable()
-export class GetMatchByIdUseCase {
+export class GetRoomByIdUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(id: number) {
-    const match = await this.prisma.match.findFirst({
+    const room = await this.prisma.room.findFirst({
       where: {
         id,
         deletedAt: null,
@@ -31,7 +31,7 @@ export class GetMatchByIdUseCase {
             playstyle: true,
           },
         },
-        MatchRequest: {
+        RoomRequest: {
           where: {
             deletedAt: null,
             status: 'accepted',
@@ -50,14 +50,14 @@ export class GetMatchByIdUseCase {
       },
     });
 
-    if (!match) {
-      throw new NotFoundException('Match not found');
+    if (!room) {
+      throw new NotFoundException('Room not found');
     }
 
     return {
-      ...match,
-      participantsCount: match.MatchRequest.length,
-      participants: match.MatchRequest,
+      ...room,
+      participantsCount: room.RoomRequest.length,
+      participants: room.RoomRequest,
     };
   }
 }

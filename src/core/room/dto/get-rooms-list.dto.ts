@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-export const GetMatchesListSchema = z.object({
+export const GetRoomsListSchema = z.object({
   page: z
     .string()
     .optional()
@@ -21,17 +21,17 @@ export const GetMatchesListSchema = z.object({
     .optional()
     .transform((val) => (val ? parseInt(val, 10) : undefined))
     .pipe(z.number().int().positive().optional())
-    .describe('Filter matches by game ID'),
+    .describe('Filter rooms by game ID'),
   userId: z
     .string()
     .optional()
     .transform((val) => (val ? parseInt(val, 10) : undefined))
     .pipe(z.number().int().positive().optional())
-    .describe('Filter matches by user ID (creator)'),
+    .describe('Filter rooms by user ID (creator)'),
   status: z
     .enum(['open', 'closed', 'in-progress', 'completed'])
     .optional()
-    .describe('Filter matches by status'),
+    .describe('Filter rooms by status'),
   sortBy: z
     .enum(['createdAt', 'updatedAt', 'scheduledAt', 'status'])
     .optional()
@@ -44,4 +44,4 @@ export const GetMatchesListSchema = z.object({
     .describe('Sort order'),
 });
 
-export class GetMatchesListDto extends createZodDto(GetMatchesListSchema) {}
+export class GetRoomsListDto extends createZodDto(GetRoomsListSchema) {}
