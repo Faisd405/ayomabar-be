@@ -30,6 +30,7 @@ export class CreateRoomUseCase {
         rankMax: data.rankMax,
         typePlay: data.typePlay ?? 'casual',
         roomType: data.roomType ?? 'public',
+        roomCode: data.roomCode,
         status: data.status ?? 'open',
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
       },

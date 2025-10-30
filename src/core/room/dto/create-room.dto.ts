@@ -47,6 +47,11 @@ export const CreateRoomSchema = z.object({
     .default('public')
     .optional()
     .describe('Room visibility type'),
+  roomCode: z
+    .string()
+    .max(100, 'Room code must not exceed 100 characters')
+    .optional()
+    .describe('Room code or link for joining (e.g., Discord link, game code)'),
   status: z
     .enum(['open', 'closed', 'in-progress', 'completed'])
     .default('open')

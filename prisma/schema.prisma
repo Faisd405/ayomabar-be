@@ -98,6 +98,7 @@ model Room {
   rankMax     Int?
   typePlay    String    @default("casual") // casual, competitive, custom, tournament
   roomType    String    @default("public") // public, private (invite-only), private (host select), private (first come first served)
+  roomCode    String?   // Room code or link for joining
   status      String    @default("open") // open, closed, in-progress, completed
   scheduledAt DateTime?
 

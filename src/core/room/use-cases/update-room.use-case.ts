@@ -49,6 +49,7 @@ export class UpdateRoomUseCase {
         ...(data.rankMax !== undefined && { rankMax: data.rankMax }),
         ...(data.typePlay && { typePlay: data.typePlay }),
         ...(data.roomType && { roomType: data.roomType }),
+        ...(data.roomCode !== undefined && { roomCode: data.roomCode }),
         ...(data.status && { status: data.status }),
         ...(data.scheduledAt !== undefined && {
           scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
