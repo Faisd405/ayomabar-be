@@ -24,7 +24,12 @@ export class CreateRoomUseCase {
       data: {
         gameId: data.gameId,
         userId,
+        minPlayers: data.minPlayers ?? 1,
         maxPlayers: data.maxPlayers ?? 1,
+        rankMin: data.rankMin,
+        rankMax: data.rankMax,
+        typePlay: data.typePlay ?? 'casual',
+        roomType: data.roomType ?? 'public',
         status: data.status ?? 'open',
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
       },

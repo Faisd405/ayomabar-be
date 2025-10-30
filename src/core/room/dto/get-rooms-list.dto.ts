@@ -32,6 +32,14 @@ export const GetRoomsListSchema = z.object({
     .enum(['open', 'closed', 'in-progress', 'completed'])
     .optional()
     .describe('Filter rooms by status'),
+  typePlay: z
+    .enum(['casual', 'competitive', 'custom', 'tournament'])
+    .optional()
+    .describe('Filter rooms by type of gameplay'),
+  roomType: z
+    .enum(['public', 'private'])
+    .optional()
+    .describe('Filter rooms by room visibility type'),
   sortBy: z
     .enum(['createdAt', 'updatedAt', 'scheduledAt', 'status'])
     .optional()

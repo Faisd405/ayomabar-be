@@ -8,7 +8,7 @@ export class GetRoomsListUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: GetRoomsListDto) {
-    const { page, limit, gameId, userId, status, sortBy, sortOrder } = query;
+    const { page, limit, gameId, userId, status, typePlay, roomType, sortBy, sortOrder } = query;
 
     // Calculate pagination
     const skip = (page - 1) * limit;
@@ -20,6 +20,8 @@ export class GetRoomsListUseCase {
       ...(gameId && { gameId }),
       ...(userId && { userId }),
       ...(status && { status }),
+      ...(typePlay && { typePlay }),
+      ...(roomType && { roomType }),
     };
 
     // Build order by clause

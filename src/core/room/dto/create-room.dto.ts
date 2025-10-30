@@ -7,6 +7,15 @@ export const CreateRoomSchema = z.object({
     .int()
     .positive('Game ID must be a positive integer')
     .describe('The ID of the game'),
+  minPlayers: z
+    .number()
+    .int()
+    .positive('Min players must be a positive integer')
+    .min(1, 'Min players must be at least 1')
+    .max(100, 'Min players must not exceed 100')
+    .default(1)
+    .optional()
+    .describe('Minimum number of players required'),
   maxPlayers: z
     .number()
     .int()
@@ -16,6 +25,28 @@ export const CreateRoomSchema = z.object({
     .default(1)
     .optional()
     .describe('Maximum number of players allowed in the room'),
+  rankMin: z
+    .number()
+    .int()
+    .positive('Rank min must be a positive integer')
+    .optional()
+    .describe('Minimum rank required (Rank ID)'),
+  rankMax: z
+    .number()
+    .int()
+    .positive('Rank max must be a positive integer')
+    .optional()
+    .describe('Maximum rank allowed (Rank ID)'),
+  typePlay: z
+    .enum(['casual', 'competitive', 'custom', 'tournament'])
+    .default('casual')
+    .optional()
+    .describe('Type of gameplay'),
+  roomType: z
+    .enum(['public', 'private'])
+    .default('public')
+    .optional()
+    .describe('Room visibility type'),
   status: z
     .enum(['open', 'closed', 'in-progress', 'completed'])
     .default('open')

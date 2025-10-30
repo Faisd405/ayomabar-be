@@ -43,7 +43,12 @@ export class UpdateRoomUseCase {
       where: { id: roomId },
       data: {
         ...(data.gameId && { gameId: data.gameId }),
+        ...(data.minPlayers !== undefined && { minPlayers: data.minPlayers }),
         ...(data.maxPlayers !== undefined && { maxPlayers: data.maxPlayers }),
+        ...(data.rankMin !== undefined && { rankMin: data.rankMin }),
+        ...(data.rankMax !== undefined && { rankMax: data.rankMax }),
+        ...(data.typePlay && { typePlay: data.typePlay }),
+        ...(data.roomType && { roomType: data.roomType }),
         ...(data.status && { status: data.status }),
         ...(data.scheduledAt !== undefined && {
           scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,

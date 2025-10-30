@@ -8,6 +8,14 @@ export const UpdateRoomSchema = z.object({
     .positive('Game ID must be a positive integer')
     .optional()
     .describe('The ID of the game'),
+  minPlayers: z
+    .number()
+    .int()
+    .positive('Min players must be a positive integer')
+    .min(1, 'Min players must be at least 1')
+    .max(100, 'Min players must not exceed 100')
+    .optional()
+    .describe('Minimum number of players required'),
   maxPlayers: z
     .number()
     .int()
@@ -16,6 +24,26 @@ export const UpdateRoomSchema = z.object({
     .max(100, 'Max players must not exceed 100')
     .optional()
     .describe('Maximum number of players allowed in the room'),
+  rankMin: z
+    .number()
+    .int()
+    .positive('Rank min must be a positive integer')
+    .optional()
+    .describe('Minimum rank required (Rank ID)'),
+  rankMax: z
+    .number()
+    .int()
+    .positive('Rank max must be a positive integer')
+    .optional()
+    .describe('Maximum rank allowed (Rank ID)'),
+  typePlay: z
+    .enum(['casual', 'competitive', 'custom', 'tournament'])
+    .optional()
+    .describe('Type of gameplay'),
+  roomType: z
+    .enum(['public', 'private'])
+    .optional()
+    .describe('Room visibility type'),
   status: z
     .enum(['open', 'closed', 'in-progress', 'completed'])
     .optional()
