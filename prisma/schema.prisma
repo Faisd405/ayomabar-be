@@ -68,6 +68,21 @@ model Game {
   @@map("games")
 }
 
+model Rank {
+  id          Int      @id @default(autoincrement())
+  gameId      Int
+  name        String
+  tier        Int?     // optional sub-rank, e.g. I, II, III
+  orderIndex  Int      // rank order lowest → highest
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@index([gameId])
+  @@unique([gameId, name, tier]) // avoid duplicate rank tier per game
+}
+
 model Match {
   id        Int       @id @default(autoincrement())
   createdAt DateTime  @default(now())
@@ -77,7 +92,10 @@ model Match {
   gameId      Int
   userId      Int /// The user who created the match
   maxPlayers  Int       @default(1)
-  status      String    @default("open") // e.g., open, closed, in-progress, completed
+  // e.g., public, private (invite-only), private (host select), private (first come first served)
+  type        String    @default("public") 
+  // e.g., open, closed, in-progress, completed
+  status      String    @default("open") 
   scheduledAt DateTime?
 
   game         Game           @relation(fields: [gameId], references: [id], onDelete: Cascade)
