@@ -40,6 +40,7 @@ CREATE TABLE "rooms" (
     "deletedAt" TIMESTAMP(3),
     "gameId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
+    "roomCode" TEXT NOT NULL,
     "minPlayers" INTEGER NOT NULL DEFAULT 1,
     "maxPlayers" INTEGER NOT NULL DEFAULT 1,
     "rankMin" INTEGER,
