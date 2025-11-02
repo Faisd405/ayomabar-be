@@ -25,6 +25,49 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository with Prisma ORM integration.
 
+## Features
+
+- 🎮 **Gaming Room Management**: Create and manage gaming rooms with rank-based matchmaking
+- 🔐 **Authentication**: JWT-based authentication with role-based access control
+- 🤖 **Discord Bot Integration**: Necord-powered Discord bot with slash commands
+- 📊 **Health Checks**: Built-in health monitoring for database and services
+- 🔒 **Security**: Rate limiting, CORS, security headers, and more
+- 📝 **API Documentation**: Auto-generated Swagger/OpenAPI documentation
+- 🗄️ **Prisma ORM**: Type-safe database access with migrations
+
+## Discord Bot Setup
+
+This application includes a Discord bot integration using [Necord](https://necord.org/).
+
+### Quick Setup
+
+1. **Create a Discord Bot**:
+   - Go to [Discord Developer Portal](https://discord.com/developers/applications)
+   - Create a new application and add a bot
+   - Copy the bot token
+
+2. **Add Environment Variables**:
+```env
+DISCORD_BOT_TOKEN=your-discord-bot-token-here
+DISCORD_DEVELOPMENT_GUILD_ID=your-guild-id-for-testing
+```
+
+3. **Invite Bot to Server**:
+   - Use OAuth2 URL Generator with `bot` and `applications.commands` scopes
+   - Grant necessary permissions (Send Messages, Embed Links, Use Slash Commands)
+
+4. **Start the Application**:
+```bash
+pnpm run start:dev
+```
+
+### Available Discord Commands
+
+- `/games` - List all available games with filters
+- `/game <id>` - Get detailed information about a specific game
+
+For detailed Discord bot documentation, see [src/discord/README.md](src/discord/README.md)
+
 ## Prisma Setup
 
 This project uses Prisma as the ORM. Follow these steps to set up Prisma:

@@ -5,6 +5,7 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import appConfig from './config/app.config';
+import discordConfig from './config/discord.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -15,15 +16,16 @@ import { AuthModule } from './core/auth/auth.module';
 import { GameModule } from './core/game/game.module';
 import { RoomModule } from './core/room/room.module';
 import { HealthModule } from './health/health.module';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { DiscordModule } from './discord/discord.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './common/guards';
+import { RolesGuard, CustomThrottlerGuard } from './common/guards';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig],
+      load: [appConfig, discordConfig],
     }),
     ThrottlerModule.forRoot([
       {
@@ -48,13 +50,14 @@ import { RolesGuard } from './common/guards';
     GameModule,
     RoomModule,
     HealthModule,
+    DiscordModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })

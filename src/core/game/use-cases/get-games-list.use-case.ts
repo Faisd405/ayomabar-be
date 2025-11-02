@@ -8,41 +8,51 @@ export class GetGamesListUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(query: GetGamesListDto) {
-    const { page, limit, search, genre, platform, sortBy, sortOrder } = query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      genre,
+      platform,
+      sortBy = 'title',
+      sortOrder = 'asc',
+    } = query;
 
-    // Calculate pagination
-    const skip = (page - 1) * limit;
-    const take = limit;
+    const pageNumber = Number(query.page) || 1;
+    const limitNumber = Number(query.limit) || 10;
 
-    // Build where clause
+    const skip = (pageNumber - 1) * limitNumber;
+    const take = limitNumber;
+
     const where: Prisma.GameWhereInput = {
       deletedAt: null,
-      ...(search && {
-        title: {
-          contains: search,
-          mode: 'insensitive' as Prisma.QueryMode,
-        },
-      }),
-      ...(genre && {
-        genre: {
-          contains: genre,
-          mode: 'insensitive' as Prisma.QueryMode,
-        },
-      }),
-      ...(platform && {
-        platform: {
-          contains: platform,
-          mode: 'insensitive' as Prisma.QueryMode,
-        },
-      }),
     };
 
-    // Build order by clause
+    if (search && typeof search === 'string' && search.trim() !== '') {
+      where.title = {
+        contains: search.trim(),
+        mode: 'insensitive',
+      };
+    }
+
+    if (genre && typeof genre === 'string' && genre.trim() !== '') {
+      where.genre = {
+        contains: genre.trim(),
+        mode: 'insensitive',
+      };
+    }
+
+    if (platform && typeof platform === 'string' && platform.trim() !== '') {
+      where.platform = {
+        contains: platform.trim(),
+        mode: 'insensitive',
+      };
+    }
+
     const orderBy: Prisma.GameOrderByWithRelationInput = {
       [sortBy]: sortOrder,
     };
 
-    // Execute queries
     const [games, total] = await Promise.all([
       this.prisma.game.findMany({
         where,
@@ -62,20 +72,17 @@ export class GetGamesListUseCase {
       this.prisma.game.count({ where }),
     ]);
 
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(total / limit);
-    const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
+    const totalPages = Math.ceil(total / take);
 
     return {
       data: games,
       meta: {
         total,
-        page,
-        limit,
+        page: Number(page),
+        limit: Number(limit),
         totalPages,
-        hasNextPage,
-        hasPreviousPage,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
       },
     };
   }

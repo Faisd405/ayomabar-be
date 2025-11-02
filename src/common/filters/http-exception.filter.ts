@@ -13,9 +13,24 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
+    // Check if this is an HTTP context
+    const contextType = host.getType();
+    
+    // Only handle HTTP contexts, skip others (like Discord, WebSocket, etc.)
+    if (contextType !== 'http') {
+      this.logger.error('Non-HTTP exception caught', exception);
+      return;
+    }
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+
+    // Additional check to ensure response exists and has required methods
+    if (!response || typeof response.status !== 'function') {
+      this.logger.error('Invalid response object', exception);
+      return;
+    }
 
     const status =
       exception instanceof HttpException
