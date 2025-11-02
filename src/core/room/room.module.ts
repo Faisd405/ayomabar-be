@@ -8,6 +8,11 @@ import {
   GetRoomByIdUseCase,
   DeleteRoomUseCase,
   GetRoomsListUseCase,
+  JoinRoomUseCase,
+  LeaveRoomUseCase,
+  ApproveRoomRequestUseCase,
+  RejectRoomRequestUseCase,
+  GetRoomRequestsUseCase,
 } from './use-cases';
 
 @Module({
@@ -20,6 +25,11 @@ import {
     GetRoomByIdUseCase,
     DeleteRoomUseCase,
     GetRoomsListUseCase,
+    JoinRoomUseCase,
+    LeaveRoomUseCase,
+    ApproveRoomRequestUseCase,
+    RejectRoomRequestUseCase,
+    GetRoomRequestsUseCase,
   ],
   exports: [RoomService],
 })

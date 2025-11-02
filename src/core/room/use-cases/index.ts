@@ -3,3 +3,8 @@ export * from './update-room.use-case';
 export * from './get-room-by-id.use-case';
 export * from './get-rooms-list.use-case';
 export * from './delete-room.use-case';
+export * from './join-room.use-case';
+export * from './leave-room.use-case';
+export * from './approve-room-request.use-case';
+export * from './reject-room-request.use-case';
+export * from './get-room-requests.use-case';

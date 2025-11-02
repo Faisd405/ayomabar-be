@@ -77,14 +77,6 @@ export class RoomControllerV1 {
       },
     },
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Game not found',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
   async create(
     @CurrentUser() user: any,
     @Body() createRoomDto: CreateRoomDto,
@@ -220,10 +212,6 @@ export class RoomControllerV1 {
       },
     },
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Room not found',
-  })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const room = await this.roomService.getRoomById(id);
     return successResponse(room, 'Room retrieved successfully');
@@ -274,18 +262,6 @@ export class RoomControllerV1 {
       },
     },
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Room not found',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Only the room creator can update',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
   async update(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -316,23 +292,274 @@ export class RoomControllerV1 {
       },
     },
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Room not found',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Only the room creator can delete',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
   async remove(
     @CurrentUser() user: any,
     @Param('id', ParseIntPipe) id: number,
   ) {
     const result = await this.roomService.deleteRoom(user.id, id);
     return successResponse(result, 'Room deleted successfully');
+  }
+
+  @Post(':id/join')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Join a room',
+    description: 'Allows a user to join an open room. For public rooms, the request is auto-accepted. For private rooms, it requires host approval.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Successfully joined the room or request sent',
+    schema: {
+      example: {
+        success: true,
+        message: 'Successfully joined the room',
+        data: {
+          id: 1,
+          roomId: 1,
+          userId: 2,
+          status: 'accepted',
+          isHost: false,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          user: {
+            id: 2,
+            name: 'Jane Doe',
+            username: 'jane_doe',
+            avatar: null,
+          },
+          room: {
+            id: 1,
+            gameId: 1,
+            minPlayers: 2,
+            maxPlayers: 4,
+            typePlay: 'casual',
+            roomType: 'public',
+            status: 'open',
+            scheduledAt: '2024-01-15T18:00:00.000Z',
+            game: {
+              id: 1,
+              title: 'Valorant',
+              genre: 'FPS',
+              platform: 'PC',
+            },
+          },
+          message: 'Successfully joined the room',
+        },
+        statusCode: 201,
+      },
+    },
+  })
+  async join(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const result = await this.roomService.joinRoom(user.id, id);
+    return successResponse(
+      result,
+      result.message || 'Successfully joined the room',
+      HttpStatus.CREATED,
+    );
+  }
+
+  @Delete(':id/leave')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Leave a room',
+    description: 'Allows a user to leave a room they have joined. Host cannot leave the room.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully left the room',
+    schema: {
+      example: {
+        success: true,
+        message: 'Successfully left the room',
+        data: {
+          message: 'Successfully left the room',
+        },
+        statusCode: 200,
+      },
+    },
+  })
+  async leave(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const result = await this.roomService.leaveRoom(user.id, id);
+    return successResponse(result, 'Successfully left the room');
+  }
+
+  @Get(':id/requests')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get room requests',
+    description: 'Get all join requests for a room. Only the room host can view requests.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Room requests retrieved successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Room requests retrieved successfully',
+        data: {
+          roomId: 1,
+          total: 5,
+          pending: 2,
+          accepted: 2,
+          rejected: 1,
+          requests: [
+            {
+              id: 1,
+              roomId: 1,
+              userId: 2,
+              status: 'pending',
+              isHost: false,
+              createdAt: '2024-01-01T00:00:00.000Z',
+              user: {
+                id: 2,
+                name: 'Jane Doe',
+                username: 'jane_doe',
+                avatar: null,
+                bio: 'Casual gamer',
+                playstyle: 'casual',
+              },
+            },
+          ],
+        },
+        statusCode: 200,
+      },
+    },
+  })
+  async getRoomRequests(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const result = await this.roomService.getRoomRequests(user.id, id);
+    return successResponse(result, 'Room requests retrieved successfully');
+  }
+
+  @Put('request/:requestId/approve')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Approve a room request',
+    description: 'Approve a pending join request for a private room. Only the room host can approve. Public rooms auto-accept and do not need manual approval.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Room request approved successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Room request approved successfully',
+        data: {
+          id: 1,
+          roomId: 1,
+          userId: 2,
+          status: 'accepted',
+          isHost: false,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          user: {
+            id: 2,
+            name: 'Jane Doe',
+            username: 'jane_doe',
+            avatar: null,
+          },
+          room: {
+            id: 1,
+            gameId: 1,
+            minPlayers: 2,
+            maxPlayers: 4,
+            typePlay: 'competitive',
+            roomType: 'private',
+            status: 'open',
+            scheduledAt: '2024-01-15T18:00:00.000Z',
+            game: {
+              id: 1,
+              title: 'Valorant',
+              genre: 'FPS',
+              platform: 'PC',
+            },
+          },
+          message: 'Room request approved successfully',
+        },
+        statusCode: 200,
+      },
+    },
+  })
+  async approveRequest(
+    @CurrentUser() user: any,
+    @Param('requestId', ParseIntPipe) requestId: number,
+  ) {
+    const result = await this.roomService.approveRoomRequest(user.id, requestId);
+    return successResponse(
+      result,
+      result.message || 'Room request approved successfully',
+    );
+  }
+
+  @Put('request/:requestId/reject')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Reject a room request',
+    description: 'Reject a pending join request for a private room. Only the room host can reject. Public rooms auto-accept and do not need manual rejection.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Room request rejected successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Room request rejected successfully',
+        data: {
+          id: 1,
+          roomId: 1,
+          userId: 2,
+          status: 'rejected',
+          isHost: false,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+          user: {
+            id: 2,
+            name: 'Jane Doe',
+            username: 'jane_doe',
+            avatar: null,
+          },
+          room: {
+            id: 1,
+            gameId: 1,
+            minPlayers: 2,
+            maxPlayers: 4,
+            typePlay: 'competitive',
+            roomType: 'private',
+            status: 'open',
+            scheduledAt: '2024-01-15T18:00:00.000Z',
+            game: {
+              id: 1,
+              title: 'Valorant',
+              genre: 'FPS',
+              platform: 'PC',
+            },
+          },
+          message: 'Room request rejected successfully',
+        },
+        statusCode: 200,
+      },
+    },
+  })
+  async rejectRequest(
+    @CurrentUser() user: any,
+    @Param('requestId', ParseIntPipe) requestId: number,
+  ) {
+    const result = await this.roomService.rejectRoomRequest(user.id, requestId);
+    return successResponse(
+      result,
+      result.message || 'Room request rejected successfully',
+    );
   }
 }
