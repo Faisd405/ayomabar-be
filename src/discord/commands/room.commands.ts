@@ -182,10 +182,7 @@ export class RoomCommands {
         //   : null,
       });
 
-      // Join room
-      const result = await this.roomService.joinRoom(user.id, roomId);
-
-      // Get room details
+      // Get room details first to check existing requests
       const room = await this.roomService.getRoomById(roomId);
 
       if (!room) {
@@ -199,10 +196,88 @@ export class RoomCommands {
         });
       }
 
-      // Count current players
+      // Check if user is the host
+      if (room.userId === user.id) {
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#FEE75C')
+              .setTitle('⚠️ You are the Host')
+              .setDescription('You cannot join your own room as you are already the host!'),
+          ],
+        });
+      }
+
+      // Check if user already has a request (pending, approved, or rejected)
+      const existingRequest = room.roomRequests?.find(
+        (req) => req.userId === user.id
+      );
+
+      if (existingRequest) {
+        const statusMessages = {
+          pending: {
+            color: '#FEE75C',
+            title: '⏳ Request Already Pending',
+            description: `You already have a pending request for this room.\nPlease wait for the host to approve it.`,
+          },
+          approved: {
+            color: '#57F287',
+            title: '✅ Already in Room',
+            description: `You have already joined this room!`,
+          },
+          rejected: {
+            color: '#ED4245',
+            title: '❌ Request Rejected',
+            description: `Your previous request was rejected by the host.\nYou cannot request to join this room again.`,
+          },
+        };
+
+        const statusInfo = statusMessages[existingRequest.status] || {
+          color: '#99AAB5',
+          title: '❓ Unknown Status',
+          description: `You have an existing request with status: ${existingRequest.status}`,
+        };
+
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor(statusInfo.color)
+              .setTitle(statusInfo.title)
+              .setDescription(statusInfo.description)
+              .addFields(
+                { name: '🎮 Game', value: room.game?.title || 'Unknown', inline: true },
+                { name: '📊 Request Status', value: existingRequest.status.toUpperCase(), inline: true },
+              )
+              .setTimestamp(existingRequest.createdAt),
+          ],
+        });
+      }
+
+      // Check if room is full
       const currentPlayers = room.roomRequests?.filter(
         (req) => req.status === 'approved' || req.isHost
       ).length || 1;
+
+      if (currentPlayers >= room.maxSlot) {
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#ED4245')
+              .setTitle('🚫 Room Full')
+              .setDescription(`This room is already full (${currentPlayers}/${room.maxSlot} players).`)
+              .addFields(
+                { name: '🎮 Game', value: room.game?.title || 'Unknown', inline: true },
+                { name: '👥 Players', value: `${currentPlayers}/${room.maxSlot}`, inline: true },
+              ),
+          ],
+        });
+      }
+
+      // Join room
+      const result = await this.roomService.joinRoom(user.id, roomId);
+
+      // Recalculate current players after join
+      const updatedCurrentPlayers = currentPlayers + 1;
 
       // Create success embed
       const embed = new EmbedBuilder()
@@ -215,7 +290,7 @@ export class RoomCommands {
         )
         .addFields(
           { name: '🎮 Game', value: room.game?.title || 'Unknown', inline: true },
-          { name: '👥 Players', value: `${currentPlayers}/${room.maxSlot}`, inline: true },
+          { name: '👥 Players', value: `${updatedCurrentPlayers}/${room.maxSlot}`, inline: true },
           { name: '📊 Status', value: result.status.toUpperCase(), inline: true },
         )
         .setTimestamp();
@@ -236,12 +311,12 @@ export class RoomCommands {
           const playerFieldIndex = fields.findIndex(f => f.name === '👥 Players');
           
           if (playerFieldIndex !== -1) {
-            fields[playerFieldIndex].value = `${currentPlayers}/${room.maxSlot}`;
+            fields[playerFieldIndex].value = `${updatedCurrentPlayers}/${room.maxSlot}`;
             originalEmbed.setFields(fields);
           }
 
           // Disable button if room is full
-          if (currentPlayers >= room.maxSlot) {
+          if (updatedCurrentPlayers >= room.maxSlot) {
             // Create new disabled button row
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
               new ButtonBuilder()
