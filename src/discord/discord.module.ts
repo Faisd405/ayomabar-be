@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { NecordModule } from 'necord';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { IntentsBitField } from 'discord.js';
-import { GameCommands } from './commands';
+import { GameCommands, RoomCommands } from './commands';
 import { GameModule } from '../core/game/game.module';
+import { RoomModule } from '../core/room/room.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { GameModule } from '../core/game/game.module';
       inject: [ConfigService],
     }),
     GameModule,
+    RoomModule,
   ],
-  providers: [GameCommands],
+  providers: [GameCommands, RoomCommands],
 })
 export class DiscordModule {}
