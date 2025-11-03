@@ -8,6 +8,7 @@ import {
   GetUserByIdUseCase,
   DeleteUserUseCase,
   GetUsersListUseCase,
+  FindOrCreateUserByDiscordUseCase,
 } from './use-cases';
 
 @Module({
@@ -20,6 +21,7 @@ import {
     GetUserByIdUseCase,
     DeleteUserUseCase,
     GetUsersListUseCase,
+    FindOrCreateUserByDiscordUseCase,
   ],
   exports: [UserService],
 })

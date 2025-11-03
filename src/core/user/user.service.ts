@@ -6,6 +6,7 @@ import {
   GetUserByIdUseCase,
   DeleteUserUseCase,
   GetUsersListUseCase,
+  FindOrCreateUserByDiscordUseCase,
 } from './use-cases';
 import {
   CreateUserDto,
@@ -22,6 +23,7 @@ export class UserService {
     private readonly getUserByIdUseCase: GetUserByIdUseCase,
     private readonly deleteUserUseCase: DeleteUserUseCase,
     private readonly getUsersListUseCase: GetUsersListUseCase,
+    private readonly findOrCreateUserByDiscordUseCase: FindOrCreateUserByDiscordUseCase,
   ) {}
 
   async createUser(data: CreateUserDto) {
@@ -42,5 +44,15 @@ export class UserService {
 
   async getUsersList(query: GetUsersListDto) {
     return this.getUsersListUseCase.execute(query);
+  }
+
+  async findOrCreateByDiscord(input: {
+    discordId: string;
+    username: string;
+    discriminator: string;
+    email?: string;
+    avatar?: string;
+  }) {
+    return this.findOrCreateUserByDiscordUseCase.execute(input);
   }
 }

@@ -3,6 +3,7 @@ import { Context, Options, SlashCommand, Button } from 'necord';
 import type { SlashCommandContext, ButtonContext } from 'necord';
 import { RoomService } from 'src/core/room/room.service';
 import { GameService } from 'src/core/game/game.service';
+import { UserService } from 'src/core/user/user.service';
 import {
   EmbedBuilder,
   ActionRowBuilder,
@@ -17,17 +18,11 @@ import { RoomCreateOptionsDto } from '../dto';
 export class RoomCommands {
   private readonly logger = new Logger(RoomCommands.name);
 
-  // Store Discord user ID to app user ID mapping (in production, use a database or cache)
-  private readonly discordUserMap = new Map<string, number>();
-
   constructor(
     private readonly roomService: RoomService,
     private readonly gameService: GameService,
-  ) {
-    // Mock user mapping for development
-    // In production, you should authenticate Discord users properly
-    this.discordUserMap.set('default', 1); // Default user ID
-  }
+    private readonly userService: UserService,
+  ) {}
 
   @SlashCommand({
     name: 'room',
@@ -40,9 +35,19 @@ export class RoomCommands {
     try {
       await interaction.deferReply();
 
-      // Get user ID from Discord (in production, implement proper authentication)
-      const userId = this.discordUserMap.get(interaction.user.id) || 
-                     this.discordUserMap.get('default') || 1;
+      // Authenticate or create user from Discord
+      const user = await this.userService.findOrCreateByDiscord({
+        discordId: interaction.user.id,
+        username: interaction.user.username,
+        discriminator: interaction.user.discriminator || '0',
+        // avatar: interaction.user.avatar
+        //   ? `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png`
+        //   : null,
+      });
+
+      this.logger.log(
+        `User authenticated: ${user.username} (ID: ${user.id}) from Discord ${interaction.user.username}`,
+      );
 
       // Validate game exists
       const game = await this.gameService.getGameById(options.gameId);
@@ -87,7 +92,7 @@ export class RoomCommands {
       }
 
       // Create room
-      const room = await this.roomService.createRoom(userId, roomData);
+      const room = await this.roomService.createRoom(user.id, roomData);
 
       // Create embed with room details
       const embed = new EmbedBuilder()
@@ -107,7 +112,7 @@ export class RoomCommands {
         .setTimestamp();
 
       // Add optional fields
-      if (roomData.roomCode) {
+      if (roomData.roomCode && room.roomType !== 'private') {
         embed.addFields({ name: '🔑 Room Code', value: `\`${roomData.roomCode}\`` });
       }
 
@@ -167,16 +172,22 @@ export class RoomCommands {
 
       await interaction.deferReply({ ephemeral: true });
 
-      // Get user ID from Discord
-      const userId = this.discordUserMap.get(interaction.user.id) || 
-                     this.discordUserMap.get('default') || 1;
+      // Authenticate or create user from Discord
+      const user = await this.userService.findOrCreateByDiscord({
+        discordId: interaction.user.id,
+        username: interaction.user.username,
+        discriminator: interaction.user.discriminator || '0',
+        // avatar: interaction.user.avatar
+        //   ? `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png`
+        //   : null,
+      });
 
       // Join room
-      const result = await this.roomService.joinRoom(userId, roomId);
+      const result = await this.roomService.joinRoom(user.id, roomId);
 
       // Get room details
       const room = await this.roomService.getRoomById(roomId);
-      
+
       if (!room) {
         return interaction.editReply({
           embeds: [
@@ -209,7 +220,7 @@ export class RoomCommands {
         )
         .setTimestamp();
 
-      if (room.roomCode && room.roomType !== 'private') {
+      if (room.roomCode) {
         embed.addFields({ name: '🔑 Room Code', value: `\`${room.roomCode}\`` });
       }
 

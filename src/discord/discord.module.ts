@@ -5,6 +5,7 @@ import { IntentsBitField } from 'discord.js';
 import { GameCommands, RoomCommands } from './commands';
 import { GameModule } from '../core/game/game.module';
 import { RoomModule } from '../core/room/room.module';
+import { UserModule } from '../core/user/user.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { RoomModule } from '../core/room/room.module';
     }),
     GameModule,
     RoomModule,
+    UserModule,
   ],
   providers: [GameCommands, RoomCommands],
 })
