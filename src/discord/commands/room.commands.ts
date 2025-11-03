@@ -209,7 +209,7 @@ export class RoomCommands {
         )
         .setTimestamp();
 
-      if (room.roomCode) {
+      if (room.roomCode && room.roomType !== 'private') {
         embed.addFields({ name: '🔑 Room Code', value: `\`${room.roomCode}\`` });
       }
 
