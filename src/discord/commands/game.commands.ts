@@ -4,6 +4,7 @@ import type { SlashCommandContext } from 'necord';
 import { GameService } from 'src/core/game/game.service';
 import { EmbedBuilder } from 'discord.js';
 import { SkipThrottle } from '@nestjs/throttler';
+import { GamesListOptionsDto, GameDetailOptionsDto } from '../dto';
 
 @SkipThrottle()
 @Injectable()
@@ -18,24 +19,14 @@ export class GameCommands {
   })
   async onGamesList(
     @Context() [interaction]: SlashCommandContext,
-
-    @Options('page', { description: 'Page number', required: false })
-    page?: number,
-
-    @Options('search', { description: 'Search games', required: false })
-    search?: { value: string },
-
-    @Options('genre', { description: 'Filter by genre', required: false })
-    genre?: { value: string },
-
-    @Options('platform', { description: 'Filter by platform', required: false })
-    platform?: { value: string },
+    @Options() options: GamesListOptionsDto,
   ) {
     try {
       await interaction.deferReply();
 
-      const pageNumber = Number(page ?? 1) || 1;
+      const pageNumber = Number(options.page ?? 1) || 1;
 
+      // Build query object for the game service
       const query: any = {
         page: pageNumber,
         limit: 10,
@@ -43,9 +34,16 @@ export class GameCommands {
         sortOrder: 'asc',
       };
 
-      if (search?.value) query.search = search.value;
-      if (genre?.value) query.genre = genre.value;
-      if (platform?.value) query.platform = platform.value;
+      // Only add filter parameters if they have actual values
+      if (options.search?.trim()) {
+        query.search = options.search.trim();
+      }
+      if (options.genre?.trim()) {
+        query.genre = options.genre.trim();
+      }
+      if (options.platform?.trim()) {
+        query.platform = options.platform.trim();
+      }
 
       const result = await this.gameService.getGamesList(query);
 
@@ -119,19 +117,18 @@ Genre: ${game.genre ?? '-'} • Platform: ${game.platform ?? '-'} • Released: 
   })
   async onGameDetail(
     @Context() [interaction]: SlashCommandContext,
-    @Options('id', { description: 'Game ID', required: true })
-    gameId: number,
+    @Options() options: GameDetailOptionsDto,
   ) {
     try {
       await interaction.deferReply();
 
-      const game = await this.gameService.getGameById(gameId);
+      const game = await this.gameService.getGameById(options.id);
 
       if (!game) {
         const notFoundEmbed = new EmbedBuilder()
           .setColor('#FF6B6B')
           .setTitle('❌ Game Not Found')
-          .setDescription(`No game found with ID: ${gameId}`)
+          .setDescription(`No game found with ID: ${options.id}`)
           .setTimestamp();
 
         return interaction.editReply({ embeds: [notFoundEmbed] });
