@@ -31,7 +31,7 @@ export class GetRoomByIdUseCase {
             playstyle: true,
           },
         },
-        RoomRequest: {
+        roomRequests: {
           where: {
             deletedAt: null,
             status: 'accepted',
@@ -56,8 +56,8 @@ export class GetRoomByIdUseCase {
 
     return {
       ...room,
-      participantsCount: room.RoomRequest.length,
-      participants: room.RoomRequest,
+      participantsCount: room.roomRequests.length,
+      participants: room.roomRequests,
     };
   }
 }

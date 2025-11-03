@@ -17,7 +17,7 @@ export class ApproveRoomRequestUseCase {
           include: {
             _count: {
               select: {
-                RoomRequest: {
+                roomRequests: {
                   where: {
                     status: 'accepted',
                     deletedAt: null,
@@ -62,8 +62,8 @@ export class ApproveRoomRequestUseCase {
     }
 
     // Check if room is full
-    const currentParticipants = roomRequest.room._count.RoomRequest;
-    if (currentParticipants >= roomRequest.room.maxPlayers) {
+    const currentParticipants = roomRequest.room._count.roomRequests;
+    if (currentParticipants >= roomRequest.room.maxSlot) {
       throw new BadRequestException('Room is full, cannot accept more players');
     }
 
@@ -88,8 +88,8 @@ export class ApproveRoomRequestUseCase {
           select: {
             id: true,
             gameId: true,
-            minPlayers: true,
-            maxPlayers: true,
+            minSlot: true,
+            maxSlot: true,
             typePlay: true,
             roomType: true,
             status: true,

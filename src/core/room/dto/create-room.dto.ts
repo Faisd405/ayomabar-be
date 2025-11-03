@@ -7,7 +7,7 @@ export const CreateRoomSchema = z.object({
     .int()
     .positive('Game ID must be a positive integer')
     .describe('The ID of the game'),
-  minPlayers: z
+  minSlot: z
     .number()
     .int()
     .positive('Min players must be a positive integer')
@@ -16,7 +16,7 @@ export const CreateRoomSchema = z.object({
     .default(1)
     .optional()
     .describe('Minimum number of players required'),
-  maxPlayers: z
+  maxSlot: z
     .number()
     .int()
     .positive('Max players must be a positive integer')
@@ -25,13 +25,13 @@ export const CreateRoomSchema = z.object({
     .default(1)
     .optional()
     .describe('Maximum number of players allowed in the room'),
-  rankMin: z
+  rankMinId: z
     .number()
     .int()
     .positive('Rank min must be a positive integer')
     .optional()
     .describe('Minimum rank required (Rank ID)'),
-  rankMax: z
+  rankMaxId: z
     .number()
     .int()
     .positive('Rank max must be a positive integer')

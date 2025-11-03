@@ -90,7 +90,7 @@ export class RoomCreateOptionsDto {
     min_value: 2,
     max_value: 10,
   })
-  maxPlayers?: number;
+  maxSlot?: number;
 
   @BooleanOption({
     name: 'private',
@@ -130,10 +130,10 @@ export class RoomCommands {
     @Options() options: RoomCreateOptionsDto,
   ) {
     // Access validated options
-    const { name, maxPlayers, isPrivate } = options;
+    const { name, maxSlot, isPrivate } = options;
     
-    // maxPlayers will be number | undefined
-    const max = maxPlayers ?? 4; // Default to 4
+    // maxSlot will be number | undefined
+    const max = maxSlot ?? 4; // Default to 4
     
     await interaction.reply({
       content: `Room "${name}" created! Max players: ${max}, Private: ${isPrivate ?? false}`,
@@ -560,12 +560,12 @@ count?: number; // Add ? for optional
 
 **Problem:**
 ```typescript
-const maxPlayers = options.maxPlayers * 2; // Error if undefined
+const maxSlot = options.maxSlot * 2; // Error if undefined
 ```
 
 **Solution:**
 ```typescript
-const maxPlayers = (options.maxPlayers ?? 4) * 2; // Use nullish coalescing
+const maxSlot = (options.maxSlot ?? 4) * 2; // Use nullish coalescing
 ```
 
 ---

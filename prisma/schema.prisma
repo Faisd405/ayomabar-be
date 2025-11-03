@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -33,8 +27,8 @@ model User {
   socials   Json?
 
   notes       Note[]
-  Room        Room[]
-  RoomRequest RoomRequest[]
+  rooms       Room[]
+  roomRequest RoomRequest[]
 
   @@map("users")
 }
@@ -63,25 +57,31 @@ model Game {
   genre       String?
   platform    String?
   releaseDate DateTime?
-  Room        Room[]
-  Rank        Rank[]
+
+  rooms Room[]
+  ranks Rank[]
 
   @@map("games")
 }
 
 model Rank {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   gameId     Int
   name       String
-  tier       Int? // optional sub-rank, e.g. I, II, III
-  orderIndex Int // rank order lowest → highest
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  tier       Int?
+  orderIndex Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
-  @@unique([gameId, name, tier]) // avoid duplicate rank tier per game
+  roomsAsMin Room[] @relation("RankMin")
+  roomsAsMax Room[] @relation("RankMax")
+
+  @@unique([gameId, name, tier])
   @@index([gameId])
+  
+  @@map("ranks")
 }
 
 model Room {
@@ -90,21 +90,28 @@ model Room {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  gameId      Int
-  userId      Int // The user who created the room
-  minPlayers  Int       @default(1)
-  maxPlayers  Int       @default(1) // Need Player
-  rankMin     Int?
-  rankMax     Int?
-  typePlay    String    @default("casual") // casual, competitive, custom, tournament
-  roomType    String    @default("public") // public, private (invite-only), private (host select), private (first come first served)
-  roomCode    String?   // Room code or link for joining
-  status      String    @default("open") // open, closed, in-progress, completed
+  gameId     Int
+  userId     Int
+  minSlot    Int   @default(1)
+  maxSlot    Int   @default(1)
+
+  rankMinId  Int?
+  rankMaxId  Int?
+
+  typePlay   String? @default("casual")     
+  roomType   String? @default("public")     
+  status     String? @default("open")       
+
+  roomCode   String?
   scheduledAt DateTime?
 
-  game        Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  RoomRequest RoomRequest[]
+  game  Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rankMin Rank? @relation("RankMin", fields: [rankMinId], references: [id])
+  rankMax Rank? @relation("RankMax", fields: [rankMaxId], references: [id])
+
+  roomRequests RoomRequest[]
 
   @@map("rooms")
 }
@@ -116,8 +123,8 @@ model RoomRequest {
   deletedAt DateTime?
 
   roomId Int
-  userId Int // The user who requested to join the room
-  status String  @default("pending") // pending, accepted, rejected
+  userId Int
+  status String @default("pending")
   isHost Boolean @default(false)
 
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)

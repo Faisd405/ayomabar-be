@@ -20,7 +20,7 @@ CREATE TABLE "games" (
 );
 
 -- CreateTable
-CREATE TABLE "Rank" (
+CREATE TABLE "ranks" (
     "id" SERIAL NOT NULL,
     "gameId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE "Rank" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Rank_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ranks_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -41,10 +41,10 @@ CREATE TABLE "rooms" (
     "gameId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
     "roomCode" TEXT NOT NULL,
-    "minPlayers" INTEGER NOT NULL DEFAULT 1,
-    "maxPlayers" INTEGER NOT NULL DEFAULT 1,
-    "rankMin" INTEGER,
-    "rankMax" INTEGER,
+    "minSlot" INTEGER NOT NULL DEFAULT 1,
+    "maxSlot" INTEGER NOT NULL DEFAULT 1,
+    "rankMinId" INTEGER,
+    "rankMaxId" INTEGER,
     "typePlay" TEXT NOT NULL DEFAULT 'casual',
     "roomType" TEXT NOT NULL DEFAULT 'public',
     "status" TEXT NOT NULL DEFAULT 'open',
@@ -68,13 +68,13 @@ CREATE TABLE "room_requests" (
 );
 
 -- CreateIndex
-CREATE INDEX "Rank_gameId_idx" ON "Rank"("gameId");
+CREATE INDEX "ranks_gameId_idx" ON "ranks"("gameId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Rank_gameId_name_tier_key" ON "Rank"("gameId", "name", "tier");
+CREATE UNIQUE INDEX "ranks_gameId_name_tier_key" ON "ranks"("gameId", "name", "tier");
 
 -- AddForeignKey
-ALTER TABLE "Rank" ADD CONSTRAINT "Rank_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "games"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ranks" ADD CONSTRAINT "ranks_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "games"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "rooms" ADD CONSTRAINT "rooms_gameId_fkey" FOREIGN KEY ("gameId") REFERENCES "games"("id") ON DELETE CASCADE ON UPDATE CASCADE;

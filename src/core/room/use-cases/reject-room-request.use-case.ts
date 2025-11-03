@@ -69,8 +69,8 @@ export class RejectRoomRequestUseCase {
           select: {
             id: true,
             gameId: true,
-            minPlayers: true,
-            maxPlayers: true,
+            minSlot: true,
+            maxSlot: true,
             typePlay: true,
             roomType: true,
             status: true,

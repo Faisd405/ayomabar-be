@@ -15,7 +15,7 @@ export class JoinRoomUseCase {
       include: {
         _count: {
           select: {
-            RoomRequest: {
+            roomRequests: {
               where: {
                 status: 'accepted',
                 deletedAt: null,
@@ -36,8 +36,8 @@ export class JoinRoomUseCase {
     }
 
     // Check if room is full
-    const currentParticipants = room._count.RoomRequest;
-    if (currentParticipants >= room.maxPlayers) {
+    const currentParticipants = room._count.roomRequests;
+    if (currentParticipants >= room.maxSlot) {
       throw new BadRequestException('Room is full');
     }
 
@@ -75,8 +75,8 @@ export class JoinRoomUseCase {
           select: {
             id: true,
             gameId: true,
-            minPlayers: true,
-            maxPlayers: true,
+            minSlot: true,
+            maxSlot: true,
             typePlay: true,
             roomType: true,
             status: true,

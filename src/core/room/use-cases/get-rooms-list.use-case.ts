@@ -53,7 +53,7 @@ export class GetRoomsListUseCase {
               avatar: true,
             },
           },
-          RoomRequest: {
+          roomRequests: {
             where: {
               deletedAt: null,
               status: 'accepted',
@@ -72,7 +72,7 @@ export class GetRoomsListUseCase {
     // Add participants count to each room
     const roomsWithCount = rooms.map((room) => ({
       ...room,
-      participantsCount: room.RoomRequest.length,
+      participantsCount: room.roomRequests.length,
     }));
 
     // Calculate pagination metadata
