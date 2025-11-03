@@ -40,14 +40,14 @@ CREATE TABLE "rooms" (
     "deletedAt" TIMESTAMP(3),
     "gameId" INTEGER NOT NULL,
     "userId" INTEGER NOT NULL,
-    "roomCode" TEXT NOT NULL,
     "minSlot" INTEGER NOT NULL DEFAULT 1,
     "maxSlot" INTEGER NOT NULL DEFAULT 1,
     "rankMinId" INTEGER,
     "rankMaxId" INTEGER,
-    "typePlay" TEXT NOT NULL DEFAULT 'casual',
-    "roomType" TEXT NOT NULL DEFAULT 'public',
-    "status" TEXT NOT NULL DEFAULT 'open',
+    "typePlay" TEXT DEFAULT 'casual',
+    "roomType" TEXT DEFAULT 'public',
+    "status" TEXT DEFAULT 'open',
+    "roomCode" TEXT,
     "scheduledAt" TIMESTAMP(3),
 
     CONSTRAINT "rooms_pkey" PRIMARY KEY ("id")
@@ -81,6 +81,12 @@ ALTER TABLE "rooms" ADD CONSTRAINT "rooms_gameId_fkey" FOREIGN KEY ("gameId") RE
 
 -- AddForeignKey
 ALTER TABLE "rooms" ADD CONSTRAINT "rooms_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "rooms" ADD CONSTRAINT "rooms_rankMinId_fkey" FOREIGN KEY ("rankMinId") REFERENCES "ranks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "rooms" ADD CONSTRAINT "rooms_rankMaxId_fkey" FOREIGN KEY ("rankMaxId") REFERENCES "ranks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "room_requests" ADD CONSTRAINT "room_requests_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "rooms"("id") ON DELETE CASCADE ON UPDATE CASCADE;

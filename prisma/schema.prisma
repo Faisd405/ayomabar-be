@@ -29,8 +29,23 @@ model User {
   notes       Note[]
   rooms       Room[]
   roomRequest RoomRequest[]
+  socialites  UserSocialite[]
 
   @@map("users")
+}
+
+model UserSocialite {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  socialite_name String
+  socialite_id   String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([socialite_name, socialite_id])
+  @@map("user_socialites")
 }
 
 model Note {
@@ -65,13 +80,13 @@ model Game {
 }
 
 model Rank {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   gameId     Int
   name       String
   tier       Int?
   orderIndex Int
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
@@ -80,7 +95,6 @@ model Rank {
 
   @@unique([gameId, name, tier])
   @@index([gameId])
-  
   @@map("ranks")
 }
 
@@ -90,23 +104,23 @@ model Room {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  gameId     Int
-  userId     Int
-  minSlot    Int   @default(1)
-  maxSlot    Int   @default(1)
+  gameId  Int
+  userId  Int
+  minSlot Int @default(1)
+  maxSlot Int @default(1)
 
-  rankMinId  Int?
-  rankMaxId  Int?
+  rankMinId Int?
+  rankMaxId Int?
 
-  typePlay   String? @default("casual")     
-  roomType   String? @default("public")     
-  status     String? @default("open")       
+  typePlay String? @default("casual")
+  roomType String? @default("public")
+  status   String? @default("open")
 
-  roomCode   String?
+  roomCode    String?
   scheduledAt DateTime?
 
-  game  Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   rankMin Rank? @relation("RankMin", fields: [rankMinId], references: [id])
   rankMax Rank? @relation("RankMax", fields: [rankMaxId], references: [id])
@@ -124,7 +138,7 @@ model RoomRequest {
 
   roomId Int
   userId Int
-  status String @default("pending")
+  status String  @default("pending")
   isHost Boolean @default(false)
 
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
