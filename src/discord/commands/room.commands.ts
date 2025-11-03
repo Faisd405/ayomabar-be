@@ -228,40 +228,47 @@ export class RoomCommands {
 
       // Update the original message to show updated player count
       if (room.roomType === 'public' && interaction.message) {
-        const originalEmbed = EmbedBuilder.from(interaction.message.embeds[0]);
-        
-        // Update player count field
-        const fields = originalEmbed.data.fields || [];
-        const playerFieldIndex = fields.findIndex(f => f.name === '👥 Players');
-        
-        if (playerFieldIndex !== -1) {
-          fields[playerFieldIndex].value = `${currentPlayers}/${room.maxSlot}`;
-          originalEmbed.setFields(fields);
-        }
-
-        // Disable button if room is full
-        if (currentPlayers >= room.maxSlot) {
-          // Create new disabled button row
-          const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`join_room_${roomId}`)
-              .setLabel('Room Full')
-              .setStyle(ButtonStyle.Secondary)
-              .setEmoji('🎮')
-              .setDisabled(true),
-            new ButtonBuilder()
-              .setCustomId(`room_info_${roomId}`)
-              .setLabel('Room Info')
-              .setStyle(ButtonStyle.Primary)
-              .setEmoji('ℹ️'),
-          );
+        try {
+          const originalEmbed = EmbedBuilder.from(interaction.message.embeds[0]);
           
-          await interaction.message.edit({
-            embeds: [originalEmbed],
-            components: [row],
-          });
-        } else {
-          await interaction.message.edit({ embeds: [originalEmbed] });
+          // Update player count field
+          const fields = originalEmbed.data.fields || [];
+          const playerFieldIndex = fields.findIndex(f => f.name === '👥 Players');
+          
+          if (playerFieldIndex !== -1) {
+            fields[playerFieldIndex].value = `${currentPlayers}/${room.maxSlot}`;
+            originalEmbed.setFields(fields);
+          }
+
+          // Disable button if room is full
+          if (currentPlayers >= room.maxSlot) {
+            // Create new disabled button row
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+              new ButtonBuilder()
+                .setCustomId(`join_room_${roomId}`)
+                .setLabel('Room Full')
+                .setStyle(ButtonStyle.Secondary)
+                .setEmoji('🎮')
+                .setDisabled(true),
+              new ButtonBuilder()
+                .setCustomId(`room_info_${roomId}`)
+                .setLabel('Room Info')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('ℹ️'),
+            );
+            
+            await interaction.message.edit({
+              embeds: [originalEmbed],
+              components: [row],
+            });
+          } else {
+            await interaction.message.edit({ embeds: [originalEmbed] });
+          }
+        } catch (editError) {
+          // Log but don't throw - message might not be in cache or accessible
+          this.logger.warn(
+            `Could not update original message for room ${roomId}: ${editError instanceof Error ? editError.message : 'Unknown error'}`,
+          );
         }
       }
 
