@@ -111,11 +111,6 @@ export class RoomCommands {
         .setFooter({ text: `Created by ${interaction.user.username}` })
         .setTimestamp();
 
-      // Add optional fields
-      if (roomData.roomCode && room.roomType !== 'private') {
-        embed.addFields({ name: '🔑 Room Code', value: `\`${roomData.roomCode}\`` });
-      }
-
       if (roomData.scheduledAt) {
         const scheduledDate = new Date(roomData.scheduledAt);
         embed.addFields({
