@@ -208,7 +208,7 @@ export class RoomCommands {
         });
       }
 
-      // Check if user already has a request (pending, approved, or rejected)
+      // Check if user already has a request (pending, accepted, or rejected)
       const existingRequest = room.roomRequests?.find(
         (req) => req.userId === user.id
       );
@@ -220,7 +220,7 @@ export class RoomCommands {
             title: '⏳ Request Already Pending',
             description: `You already have a pending request for this room.\nPlease wait for the host to approve it.`,
           },
-          approved: {
+          accepted: {
             color: '#57F287',
             title: '✅ Already in Room',
             description: `You have already joined this room!`,
@@ -255,7 +255,7 @@ export class RoomCommands {
 
       // Check if room is full
       const currentPlayers = room.roomRequests?.filter(
-        (req) => req.status === 'approved' || req.isHost
+        (req) => req.status === 'accepted' || req.isHost
       ).length || 1;
 
       if (currentPlayers >= room.maxSlot) {
@@ -391,8 +391,8 @@ export class RoomCommands {
       }
 
       // Count current players
-      const approvedPlayers = room.roomRequests?.filter(
-        (req) => req.status === 'approved' || req.isHost
+      const acceptedPlayers = room.roomRequests?.filter(
+        (req) => req.status === 'accepted' || req.isHost
       ) || [];
       
       const pendingPlayers = room.roomRequests?.filter(
@@ -406,7 +406,7 @@ export class RoomCommands {
         .setDescription(`**${room.game?.title || 'Unknown Game'}**`)
         .addFields(
           { name: '👑 Host', value: room.user?.username || 'Unknown', inline: true },
-          { name: '👥 Players', value: `${approvedPlayers.length}/${room.maxSlot}`, inline: true },
+          { name: '👥 Players', value: `${acceptedPlayers.length}/${room.maxSlot}`, inline: true },
           { name: '🎯 Min Players', value: room.minSlot.toString(), inline: true },
           { name: '🎲 Type', value: room.typePlay?.toUpperCase() || 'CASUAL', inline: true },
           { name: '🔓 Visibility', value: room.roomType?.toUpperCase() || 'PUBLIC', inline: true },
@@ -430,8 +430,8 @@ export class RoomCommands {
       }
 
       // Add player lists
-      if (approvedPlayers.length > 0) {
-        const playerList = approvedPlayers
+      if (acceptedPlayers.length > 0) {
+        const playerList = acceptedPlayers
           .map((req) => `• ${req.user?.username || 'Unknown'} ${req.isHost ? '👑' : ''}`)
           .join('\n');
         embed.addFields({ name: '✅ Current Players', value: playerList || 'None' });
