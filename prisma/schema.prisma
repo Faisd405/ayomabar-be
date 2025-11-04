@@ -116,8 +116,10 @@ model Room {
   roomType String? @default("public")
   status   String? @default("open")
 
-  roomCode    String?
-  scheduledAt DateTime?
+  roomCode         String?
+  scheduledAt      DateTime?
+  discordMessageId String?
+  discordChannelId String?
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -9,6 +9,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  Message,
 } from 'discord.js';
 import { SkipThrottle } from '@nestjs/throttler';
 import { RoomCreateOptionsDto } from '../dto';
@@ -131,11 +132,22 @@ export class RoomCommands {
           .setLabel('Room Info')
           .setStyle(ButtonStyle.Primary)
           .setEmoji('ℹ️'),
+        new ButtonBuilder()
+          .setCustomId(`bump_room_${room.id}`)
+          .setLabel('Bump')
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji('⬆️'),
       );
 
-      await interaction.editReply({
+      const message = await interaction.editReply({
         embeds: [embed],
         components: [row],
+      });
+
+      // Store message ID and channel ID for future bump operations
+      await this.roomService.updateRoom(user.id, room.id, {
+        discordMessageId: (message as Message).id,
+        discordChannelId: interaction.channelId,
       });
 
       this.logger.log(
@@ -332,6 +344,16 @@ export class RoomCommands {
               .setStyle(isFull ? ButtonStyle.Secondary : ButtonStyle.Success)
               .setEmoji('🎮')
               .setDisabled(isFull),
+            new ButtonBuilder()
+              .setCustomId(`room_info_${roomId}`)
+              .setLabel('Room Info')
+              .setStyle(ButtonStyle.Primary)
+              .setEmoji('ℹ️'),
+            new ButtonBuilder()
+              .setCustomId(`bump_room_${roomId}`)
+              .setLabel('Bump')
+              .setStyle(ButtonStyle.Secondary)
+              .setEmoji('⬆️'),
           );
 
           await originalMessage.edit({
@@ -466,6 +488,185 @@ export class RoomCommands {
             .setColor('#FF6B6B')
             .setTitle('❌ Error Getting Room Info')
             .setDescription(errorMessage),
+        ],
+      });
+    }
+  }
+
+  @Button('bump_room_:roomId')
+  async onBumpRoom(@Context() [interaction]: ButtonContext) {
+    try {
+      const roomId = parseInt(interaction.customId.split('_')[2]);
+      await interaction.deferReply({ ephemeral: true });
+
+      // Authenticate user
+      const user = await this.userService.findOrCreateByDiscord({
+        discordId: interaction.user.id,
+        username: interaction.user.username,
+        discriminator: interaction.user.discriminator || '0',
+      });
+
+      // Get room details
+      const room = await this.roomService.getRoomById(roomId);
+
+      if (!room) {
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#FF6B6B')
+              .setTitle('❌ Room Not Found')
+              .setDescription(`Room #${roomId} no longer exists.`),
+          ],
+        });
+      }
+
+      // Check if user is the host
+      if (room.userId !== user.id) {
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#FEE75C')
+              .setTitle('⚠️ Permission Denied')
+              .setDescription('Only the room host can bump the room!'),
+          ],
+        });
+      }
+
+      // Check if room is closed
+      if (room.status === 'closed' || room.status === 'completed') {
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#ED4245')
+              .setTitle('❌ Room Closed')
+              .setDescription('You cannot bump a closed or completed room.'),
+          ],
+        });
+      }
+
+      // Get the channel and delete old message if it exists
+      if (room.discordMessageId && room.discordChannelId) {
+        try {
+          const channel = await interaction.client.channels.fetch(room.discordChannelId);
+          
+          if (channel?.isTextBased() && 'messages' in channel) {
+            const oldMessage = await channel.messages.fetch(room.discordMessageId);
+            await oldMessage.delete();
+            this.logger.log(`🗑️ Deleted old lobby message for room ${roomId}`);
+          }
+        } catch (error) {
+          this.logger.warn(`⚠️ Could not delete old message for room ${roomId}:`, error.message);
+        }
+      }
+
+      // Get game details
+      const game = await this.gameService.getGameById(room.gameId);
+
+      // Count current players
+      const currentPlayers = room.roomRequests?.filter(
+        (req) => req.status === 'accepted' || req.isHost
+      ).length || 1;
+
+      // Create new embed
+      const embed = new EmbedBuilder()
+        .setColor('#5865F2')
+        .setTitle('🎮 Room Lobby (Bumped)')
+        .setDescription(`**${game?.title || 'Unknown Game'}** room is open for players!`)
+        .addFields(
+          { name: '🆔 Room ID', value: `#${room.id}`, inline: true },
+          { name: '👥 Players', value: `${currentPlayers}/${room.maxSlot}`, inline: true },
+          { name: '🎯 Min Players', value: room.minSlot.toString(), inline: true },
+          { name: '🎲 Type', value: room.typePlay?.toUpperCase() || 'CASUAL', inline: true },
+          { name: '🔓 Visibility', value: room.roomType?.toUpperCase() || 'PUBLIC', inline: true },
+          { name: '📊 Status', value: room.status?.toUpperCase() || 'OPEN', inline: true },
+        )
+        .setFooter({ text: `Created by ${room.user?.username || 'Unknown'} • Bumped by ${interaction.user.username}` })
+        .setTimestamp();
+
+      if (room.roomCode && room.roomType !== 'private') {
+        embed.addFields({ name: '🔑 Room Code', value: `\`${room.roomCode}\`` });
+      }
+
+      if (room.scheduledAt) {
+        const scheduledDate = new Date(room.scheduledAt);
+        embed.addFields({
+          name: '📅 Scheduled At',
+          value: `<t:${Math.floor(scheduledDate.getTime() / 1000)}:F>`,
+        });
+      }
+
+      // Create buttons
+      const isFull = currentPlayers >= room.maxSlot;
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`join_room_${room.id}`)
+          .setLabel(isFull ? 'Room Full' : 'Join Room')
+          .setStyle(isFull ? ButtonStyle.Secondary : ButtonStyle.Success)
+          .setEmoji('🎮')
+          .setDisabled(isFull),
+        new ButtonBuilder()
+          .setCustomId(`room_info_${room.id}`)
+          .setLabel('Room Info')
+          .setStyle(ButtonStyle.Primary)
+          .setEmoji('ℹ️'),
+        new ButtonBuilder()
+          .setCustomId(`bump_room_${room.id}`)
+          .setLabel('Bump')
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji('⬆️'),
+      );
+
+      // Send new message in the channel
+      const channel = interaction.channel;
+      if (!channel?.isTextBased() || !('send' in channel)) {
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#ED4245')
+              .setTitle('❌ Channel Error')
+              .setDescription('Unable to send message in this channel.'),
+          ],
+        });
+      }
+
+      const newMessage = await channel.send({
+        embeds: [embed],
+        components: [row],
+      });
+
+      // Update room with new message ID
+      await this.roomService.updateRoom(user.id, room.id, {
+        discordMessageId: newMessage.id,
+        discordChannelId: newMessage.channelId,
+      });
+
+      // Send confirmation to user
+      await interaction.editReply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor('#57F287')
+            .setTitle('✅ Room Bumped!')
+            .setDescription(`Room #${roomId} has been bumped to the top of the channel.`)
+            .setTimestamp(),
+        ],
+      });
+
+      this.logger.log(
+        `⬆️ Room ${roomId} bumped by ${interaction.user.username}`,
+      );
+    } catch (error) {
+      this.logger.error('Error bumping room:', error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : 'An unexpected error occurred';
+
+      await interaction.editReply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor('#FF6B6B')
+            .setTitle('❌ Error Bumping Room')
+            .setDescription(errorMessage)
+            .setFooter({ text: 'Please try again or contact support' }),
         ],
       });
     }

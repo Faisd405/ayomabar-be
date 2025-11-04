@@ -58,6 +58,14 @@ export const UpdateRoomSchema = z.object({
     .datetime('Invalid date format')
     .optional()
     .describe('Scheduled date and time for the room'),
+  discordMessageId: z
+    .string()
+    .optional()
+    .describe('Discord message ID for the room lobby'),
+  discordChannelId: z
+    .string()
+    .optional()
+    .describe('Discord channel ID where the room lobby is posted'),
 });
 
 export class UpdateRoomDto extends createZodDto(UpdateRoomSchema) {}
