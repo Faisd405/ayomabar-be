@@ -9,6 +9,14 @@ export class RoomCreateOptionsDto {
   })
   gameId: number;
 
+  @StringOption({
+    name: 'room_code',
+    description: 'Room code or link for joining (e.g., game code, Discord link)',
+    required: true,
+    max_length: 100,
+  })
+  roomCode?: string;
+
   @NumberOption({
     name: 'max_players',
     description: 'Maximum number of players allowed',
@@ -50,14 +58,6 @@ export class RoomCreateOptionsDto {
     ],
   })
   roomType?: 'public' | 'private';
-
-  @StringOption({
-    name: 'room_code',
-    description: 'Room code or link for joining (e.g., game code, Discord link)',
-    required: true,
-    max_length: 100,
-  })
-  roomCode?: string;
 
   @StringOption({
     name: 'scheduled_at',
