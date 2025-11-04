@@ -301,50 +301,57 @@ export class RoomCommands {
 
       await interaction.editReply({ embeds: [embed] });
 
-      // Update the original message to show updated player count
-      if (room.roomType === 'public' && interaction.message) {
+      // Update the original room lobby message for all viewers
+      // Update public lobby message
+      if (room.roomType === 'public') {
         try {
-          const originalEmbed = EmbedBuilder.from(interaction.message.embeds[0]);
-          
-          // Update player count field
-          const fields = originalEmbed.data.fields || [];
-          const playerFieldIndex = fields.findIndex(f => f.name === '👥 Players');
-          
-          if (playerFieldIndex !== -1) {
-            fields[playerFieldIndex].value = `${updatedCurrentPlayers}/${room.maxSlot}`;
-            originalEmbed.setFields(fields);
+          let channel = interaction.channel;
+
+          if (!channel && interaction.message?.channelId) {
+            const fetchedChannel = await interaction.client.channels.fetch(interaction.message.channelId);
+            channel = fetchedChannel?.isTextBased() ? fetchedChannel : null;
           }
 
-          // Disable button if room is full
-          if (updatedCurrentPlayers >= room.maxSlot) {
-            // Create new disabled button row
-            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-              new ButtonBuilder()
-                .setCustomId(`join_room_${roomId}`)
-                .setLabel('Room Full')
-                .setStyle(ButtonStyle.Secondary)
-                .setEmoji('🎮')
-                .setDisabled(true),
-              new ButtonBuilder()
-                .setCustomId(`room_info_${roomId}`)
-                .setLabel('Room Info')
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji('ℹ️'),
-            );
-            
-            await interaction.message.edit({
-              embeds: [originalEmbed],
-              components: [row],
-            });
-          } else {
-            await interaction.message.edit({ embeds: [originalEmbed] });
+          if (!channel || !('messages' in channel)) {
+            this.logger.warn(`⚠️ No message channel available for room ${roomId}, skipping UI update`);
+            return;
           }
-        } catch (editError) {
-          // Log but don't throw - message might not be in cache or accessible
-          this.logger.warn(
-            `Could not update original message for room ${roomId}: ${editError instanceof Error ? editError.message : 'Unknown error'}`,
+
+          const originalMessage = await channel.messages.fetch(interaction.message.id);
+
+          const embed = EmbedBuilder.from(originalMessage.embeds[0]);
+          const fields = embed.data.fields ?? [];
+
+          const index = fields.findIndex(f => f.name === '👥 Players');
+          if (index !== -1) {
+            fields[index].value = `${updatedCurrentPlayers}/${room.maxSlot}`;
+            embed.setFields(fields);
+          }
+
+          const isFull = updatedCurrentPlayers >= room.maxSlot;
+
+          const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`join_room_${roomId}`)
+              .setLabel(isFull ? 'Room Full' : 'Join Room')
+              .setStyle(isFull ? ButtonStyle.Secondary : ButtonStyle.Success)
+              .setEmoji('🎮')
+              .setDisabled(isFull),
           );
+
+          await originalMessage.edit({
+            embeds: [embed],
+            components: [row],
+          });
+
+          this.logger.log(`✅ Lobby updated for room ${roomId}`);
+        } catch (err) {
+          this.logger.error(`❌ Failed updating lobby for room ${roomId}`, err);
         }
+      } else {
+        this.logger.debug(
+          `Skipping lobby update - roomType: ${room.roomType}, hasMessage: ${!!interaction.message}, hasChannel: ${!!interaction.channel}`,
+        );
       }
 
       this.logger.log(
