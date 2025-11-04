@@ -12,7 +12,7 @@ export class RoomCreateOptionsDto {
   @NumberOption({
     name: 'max_players',
     description: 'Maximum number of players allowed',
-    required: false,
+    required: true,
     min_value: 1,
     max_value: 100,
   })
@@ -54,7 +54,7 @@ export class RoomCreateOptionsDto {
   @StringOption({
     name: 'room_code',
     description: 'Room code or link for joining (e.g., game code, Discord link)',
-    required: false,
+    required: true,
     max_length: 100,
   })
   roomCode?: string;
