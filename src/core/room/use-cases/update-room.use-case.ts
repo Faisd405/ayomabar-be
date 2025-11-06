@@ -54,6 +54,10 @@ export class UpdateRoomUseCase {
         ...(data.scheduledAt !== undefined && {
           scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
         }),
+        ...(data.discordMessageId !== undefined && { discordMessageId: data.discordMessageId }),
+        ...(data.discordChannelId !== undefined && {
+          discordChannelId: data.discordChannelId,
+        }),
       },
       include: {
         game: {
