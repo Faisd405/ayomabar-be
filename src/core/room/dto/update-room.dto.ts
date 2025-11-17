@@ -66,6 +66,16 @@ export const UpdateRoomSchema = z.object({
     .string()
     .optional()
     .describe('Discord channel ID where the room lobby is posted'),
+  expiresAt: z
+    .string()
+    .datetime('Invalid date format')
+    .optional()
+    .describe('When the room lobby will expire'),
+  lastBumpedAt: z
+    .string()
+    .datetime('Invalid date format')
+    .optional()
+    .describe('Last time the room was bumped'),
 });
 
 export class UpdateRoomDto extends createZodDto(UpdateRoomSchema) {}

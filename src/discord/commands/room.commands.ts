@@ -25,6 +25,111 @@ export class RoomCommands {
     private readonly userService: UserService,
   ) {}
 
+  /**
+   * Calculate expiration time for a room (default: 5 Minutes)
+   */
+  private getDefaultExpirationTime(): Date {
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutes from now
+    return expiresAt;
+  }
+
+  /**
+   * Check if room is expired based on expiresAt timestamp
+   */
+  private checkRoomExpiration(room: any): {
+    isExpired: boolean;
+    timeUntilExpiration?: number;
+  } {
+    // If room is closed or completed, it's expired
+    if (room.status === 'closed' || room.status === 'completed') {
+      return {
+        isExpired: true,
+      };
+    }
+
+    // Check if room has an expiration date
+    if (!room.expiresAt) {
+      return {
+        isExpired: false,
+      };
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(room.expiresAt);
+    const timeUntilExpiration = expiresAt.getTime() - now.getTime();
+
+    // Room has expired
+    if (timeUntilExpiration <= 0) {
+      return {
+        isExpired: true,
+        timeUntilExpiration: 0,
+      };
+    }
+
+    // Room is still active
+    return {
+      isExpired: false,
+      timeUntilExpiration,
+    };
+  }
+
+  /**
+   * Format time until expiration for display
+   */
+  private formatTimeUntilExpiration(milliseconds: number): string {
+    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  }
+
+  /**
+   * Create buttons based on room expiration status
+   */
+  private createRoomButtonsWithExpiration(
+    roomId: number,
+    isFull: boolean,
+    expirationInfo: { isExpired: boolean },
+  ) {
+    const isExpired = expirationInfo.isExpired;
+
+    return new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`join_room_${roomId}`)
+        .setLabel(
+          isExpired
+            ? 'Expired - Cannot Join'
+            : isFull
+              ? 'Room Full'
+              : 'Join Room'
+        )
+        .setStyle(
+          isExpired
+            ? ButtonStyle.Danger
+            : isFull
+              ? ButtonStyle.Secondary
+              : ButtonStyle.Success
+        )
+        .setEmoji(isExpired ? '🔒' : '🎮')
+        .setDisabled(isFull || isExpired),
+      new ButtonBuilder()
+        .setCustomId(`room_info_${roomId}`)
+        .setLabel('Room Info')
+        .setStyle(ButtonStyle.Primary)
+        .setEmoji('ℹ️'),
+      new ButtonBuilder()
+        .setCustomId(`bump_room_${roomId}`)
+        .setLabel('Bump')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('⬆️')
+        .setDisabled(isExpired),
+    );
+  }
+
   @SlashCommand({
     name: 'room',
     description: 'Create a new game room',
@@ -66,6 +171,7 @@ export class RoomCommands {
       }
 
       // Prepare room data
+      const expiresAt = this.getDefaultExpirationTime();
       const roomData = {
         gameId: options.gameId,
         maxSlot: options.maxPlayers ?? 4,
@@ -74,6 +180,7 @@ export class RoomCommands {
         roomType: options.roomType ?? 'public',
         roomCode: options.roomCode,
         scheduledAt: options.scheduledAt,
+        expiresAt: expiresAt.toISOString(),
       };
 
       // Validate min/max slots
@@ -120,24 +227,18 @@ export class RoomCommands {
         });
       }
 
-      // Create "Join Room" button
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`join_room_${room.id}`)
-          .setLabel('Join Room')
-          .setStyle(ButtonStyle.Success)
-          .setEmoji('🎮'),
-        new ButtonBuilder()
-          .setCustomId(`room_info_${room.id}`)
-          .setLabel('Room Info')
-          .setStyle(ButtonStyle.Primary)
-          .setEmoji('ℹ️'),
-        new ButtonBuilder()
-          .setCustomId(`bump_room_${room.id}`)
-          .setLabel('Bump')
-          .setStyle(ButtonStyle.Secondary)
-          .setEmoji('⬆️'),
-      );
+      // Add expiration time
+      if (room.expiresAt) {
+        const expirationTimestamp = Math.floor(new Date(room.expiresAt).getTime() / 1000);
+        embed.addFields({
+          name: '⏰ Expires At',
+          value: `<t:${expirationTimestamp}:R> (<t:${expirationTimestamp}:F>)`,
+        });
+      }
+
+      // Create buttons with expiration status
+      const expirationInfo = this.checkRoomExpiration(room);
+      const row = this.createRoomButtonsWithExpiration(room.id, false, expirationInfo);
 
       const message = await interaction.editReply({
         embeds: [embed],
@@ -211,6 +312,25 @@ export class RoomCommands {
               .setColor('#FEE75C')
               .setTitle('⚠️ You are the Host')
               .setDescription('You cannot join your own room as you are already the host!'),
+          ],
+        });
+      }
+
+      // Check room expiration status
+      const expirationInfo = this.checkRoomExpiration(room);
+
+      if (expirationInfo.isExpired) {
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#ED4245')
+              .setTitle('🔒 Room Expired')
+              .setDescription('This room lobby has expired and cannot accept new players.')
+              .addFields(
+                { name: '🎮 Game', value: room.game?.title || 'Unknown', inline: true },
+                { name: '📊 Status', value: 'EXPIRED', inline: true },
+              )
+              .setTimestamp(),
           ],
         });
       }
@@ -336,25 +456,9 @@ export class RoomCommands {
           }
 
           const isFull = updatedCurrentPlayers >= room.maxSlot;
-
-          const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`join_room_${roomId}`)
-              .setLabel(isFull ? 'Room Full' : 'Join Room')
-              .setStyle(isFull ? ButtonStyle.Secondary : ButtonStyle.Success)
-              .setEmoji('🎮')
-              .setDisabled(isFull),
-            new ButtonBuilder()
-              .setCustomId(`room_info_${roomId}`)
-              .setLabel('Room Info')
-              .setStyle(ButtonStyle.Primary)
-              .setEmoji('ℹ️'),
-            new ButtonBuilder()
-              .setCustomId(`bump_room_${roomId}`)
-              .setLabel('Bump')
-              .setStyle(ButtonStyle.Secondary)
-              .setEmoji('⬆️'),
-          );
+          const expirationInfo = this.checkRoomExpiration(room);
+          
+          const row = this.createRoomButtonsWithExpiration(roomId, isFull, expirationInfo);
 
           await originalMessage.edit({
             embeds: [embed],
@@ -453,6 +557,25 @@ export class RoomCommands {
         });
       }
 
+      // Add expiration info
+      const expirationInfo = this.checkRoomExpiration(room);
+      if (room.expiresAt) {
+        const expirationTimestamp = Math.floor(new Date(room.expiresAt).getTime() / 1000);
+        const statusEmoji = expirationInfo.isExpired ? '🔒' : '⏰';
+        
+        let statusText: string;
+        if (expirationInfo.isExpired) {
+          statusText = `❌ Expired at <t:${expirationTimestamp}:F>`;
+        } else {
+          statusText = `Expires <t:${expirationTimestamp}:R> (<t:${expirationTimestamp}:F>)`;
+        }
+
+        embed.addFields({
+          name: `${statusEmoji} Expiration Status`,
+          value: statusText,
+        });
+      }
+
       // Add player lists
       if (acceptedPlayers.length > 0) {
         const playerList = acceptedPlayers
@@ -532,7 +655,10 @@ export class RoomCommands {
         });
       }
 
-      // Check if room is closed
+      // Check expiration status
+      const expirationInfo = this.checkRoomExpiration(room);
+
+      // Check if room is closed or completed
       if (room.status === 'closed' || room.status === 'completed') {
         return interaction.editReply({
           embeds: [
@@ -595,26 +721,18 @@ export class RoomCommands {
         });
       }
 
+      // Add new expiration time
+      const newExpiresAt = this.getDefaultExpirationTime();
+      const expirationTimestamp = Math.floor(newExpiresAt.getTime() / 1000);
+      embed.addFields({
+        name: '⏰ Expires At',
+        value: `<t:${expirationTimestamp}:R> (<t:${expirationTimestamp}:F>)`,
+      });
+
       // Create buttons
       const isFull = currentPlayers >= room.maxSlot;
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`join_room_${room.id}`)
-          .setLabel(isFull ? 'Room Full' : 'Join Room')
-          .setStyle(isFull ? ButtonStyle.Secondary : ButtonStyle.Success)
-          .setEmoji('🎮')
-          .setDisabled(isFull),
-        new ButtonBuilder()
-          .setCustomId(`room_info_${room.id}`)
-          .setLabel('Room Info')
-          .setStyle(ButtonStyle.Primary)
-          .setEmoji('ℹ️'),
-        new ButtonBuilder()
-          .setCustomId(`bump_room_${room.id}`)
-          .setLabel('Bump')
-          .setStyle(ButtonStyle.Secondary)
-          .setEmoji('⬆️'),
-      );
+      const activeExpirationInfo = { isExpired: false };
+      const row = this.createRoomButtonsWithExpiration(room.id, isFull, activeExpirationInfo);
 
       // Send new message in the channel
       const channel = interaction.channel;
@@ -634,10 +752,13 @@ export class RoomCommands {
         components: [row],
       });
 
-      // Update room with new message ID
+      // Update room with new message ID and expiration
+      const now = new Date();
       await this.roomService.updateRoom(user.id, room.id, {
         discordMessageId: newMessage.id,
         discordChannelId: newMessage.channelId,
+        expiresAt: newExpiresAt.toISOString(),
+        lastBumpedAt: now.toISOString(),
       });
 
       // Send confirmation to user
@@ -646,13 +767,18 @@ export class RoomCommands {
           new EmbedBuilder()
             .setColor('#57F287')
             .setTitle('✅ Room Bumped!')
-            .setDescription(`Room #${roomId} has been bumped to the top of the channel.`)
+            .setDescription(`Room #${roomId} has been bumped to the top of the channel.\nExpiration time has been reset.`)
+            .addFields({
+              name: '⏰ New Expiration',
+              value: `<t:${expirationTimestamp}:R>`,
+              inline: true,
+            })
             .setTimestamp(),
         ],
       });
 
       this.logger.log(
-        `⬆️ Room ${roomId} bumped by ${interaction.user.username}`,
+        `⬆️ Room bumped: Room ${roomId} by ${interaction.user.username}`,
       );
     } catch (error) {
       this.logger.error('Error bumping room:', error);

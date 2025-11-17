@@ -62,6 +62,11 @@ export const CreateRoomSchema = z.object({
     .datetime('Invalid date format')
     .optional()
     .describe('Scheduled date and time for the room'),
+  expiresAt: z
+    .string()
+    .datetime('Invalid date format')
+    .optional()
+    .describe('When the room lobby will expire (default: 5 minutes from creation)'),
 });
 
 export class CreateRoomDto extends createZodDto(CreateRoomSchema) {}
