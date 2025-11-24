@@ -8,3 +8,5 @@ export * from './leave-room.use-case';
 export * from './approve-room-request.use-case';
 export * from './reject-room-request.use-case';
 export * from './get-room-requests.use-case';
+export * from './kick-player.use-case';
+export * from './report-player.use-case';

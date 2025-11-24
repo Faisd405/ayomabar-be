@@ -23,6 +23,7 @@ import {
   CreateRoomDto,
   UpdateRoomDto,
   GetRoomsListDto,
+  ReportPlayerDto,
 } from './dto';
 import { JwtAuthGuard } from 'src/core/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/core/auth/decorators/current-user.decorator';
@@ -560,6 +561,103 @@ export class RoomControllerV1 {
     return successResponse(
       result,
       result.message || 'Room request rejected successfully',
+    );
+  }
+
+  @Delete(':id/kick/:userId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Kick a player from the room',
+    description: 'Remove a player from the room. Only the room host can kick players. The host cannot kick themselves.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Player kicked successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Successfully kicked player from the room',
+        data: {
+          message: 'Successfully kicked john_doe from the room',
+          kickedUser: {
+            id: 2,
+            username: 'john_doe',
+            name: 'John Doe',
+          },
+          room: {
+            id: 1,
+            gameTitle: 'Valorant',
+          },
+        },
+        statusCode: 200,
+      },
+    },
+  })
+  async kickPlayer(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) roomId: number,
+    @Param('userId', ParseIntPipe) targetUserId: number,
+  ) {
+    const result = await this.roomService.kickPlayer(user.id, roomId, targetUserId);
+    return successResponse(
+      result,
+      result.message || 'Successfully kicked player from the room',
+    );
+  }
+
+  @Post(':id/report/:userId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Report a player',
+    description: 'Report a player for inappropriate behavior. Both the reporter and reported user must be/have been members of the room. Users cannot report themselves or report the same player multiple times in the same room.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Player reported successfully',
+    schema: {
+      example: {
+        success: true,
+        message: 'Successfully reported player',
+        data: {
+          message: 'Successfully reported john_doe',
+          report: {
+            id: 1,
+            reason: 'Toxic behavior and harassment during the game',
+            status: 'pending',
+            createdAt: '2024-01-01T00:00:00.000Z',
+          },
+          reportedUser: {
+            id: 2,
+            username: 'john_doe',
+            name: 'John Doe',
+          },
+          room: {
+            id: 1,
+            gameTitle: 'Valorant',
+          },
+        },
+        statusCode: 201,
+      },
+    },
+  })
+  async reportPlayer(
+    @CurrentUser() user: any,
+    @Param('id', ParseIntPipe) roomId: number,
+    @Param('userId', ParseIntPipe) reportedUserId: number,
+    @Body() reportPlayerDto: ReportPlayerDto,
+  ) {
+    const result = await this.roomService.reportPlayer(
+      user.id,
+      roomId,
+      reportedUserId,
+      reportPlayerDto,
+    );
+    return successResponse(
+      result,
+      result.message || 'Successfully reported player',
+      HttpStatus.CREATED,
     );
   }
 }

@@ -13,6 +13,8 @@ import {
   ApproveRoomRequestUseCase,
   RejectRoomRequestUseCase,
   GetRoomRequestsUseCase,
+  KickPlayerUseCase,
+  ReportPlayerUseCase,
 } from './use-cases';
 
 @Module({
@@ -30,6 +32,8 @@ import {
     ApproveRoomRequestUseCase,
     RejectRoomRequestUseCase,
     GetRoomRequestsUseCase,
+    KickPlayerUseCase,
+    ReportPlayerUseCase,
   ],
   exports: [RoomService],
 })

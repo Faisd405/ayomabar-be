@@ -151,3 +151,20 @@ model RoomRequest {
 
   @@map("room_requests")
 }
+
+model PlayerReport {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  roomId          Int
+  reporterId      Int
+  reportedUserId  Int
+  reason          String
+  status          String  @default("pending") // pending, reviewed, resolved, dismissed
+
+  @@index([roomId])
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@map("player_reports")
+}

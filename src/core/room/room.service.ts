@@ -11,11 +11,14 @@ import {
   ApproveRoomRequestUseCase,
   RejectRoomRequestUseCase,
   GetRoomRequestsUseCase,
+  KickPlayerUseCase,
+  ReportPlayerUseCase,
 } from './use-cases';
 import {
   CreateRoomDto,
   UpdateRoomDto,
   GetRoomsListDto,
+  ReportPlayerDto,
 } from './dto';
 
 @Injectable()
@@ -32,6 +35,8 @@ export class RoomService {
     private readonly approveRoomRequestUseCase: ApproveRoomRequestUseCase,
     private readonly rejectRoomRequestUseCase: RejectRoomRequestUseCase,
     private readonly getRoomRequestsUseCase: GetRoomRequestsUseCase,
+    private readonly kickPlayerUseCase: KickPlayerUseCase,
+    private readonly reportPlayerUseCase: ReportPlayerUseCase,
   ) {}
 
   async createRoom(userId: number, data: CreateRoomDto) {
@@ -72,5 +77,13 @@ export class RoomService {
 
   async getRoomRequests(hostUserId: number, roomId: number) {
     return this.getRoomRequestsUseCase.execute(hostUserId, roomId);
+  }
+
+  async kickPlayer(hostUserId: number, roomId: number, targetUserId: number) {
+    return this.kickPlayerUseCase.execute(hostUserId, roomId, targetUserId);
+  }
+
+  async reportPlayer(reporterId: number, roomId: number, reportedUserId: number, data: ReportPlayerDto) {
+    return this.reportPlayerUseCase.execute(reporterId, roomId, reportedUserId, data);
   }
 }
