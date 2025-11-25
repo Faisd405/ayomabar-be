@@ -14,6 +14,10 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  });
   app.useGlobalPipes(new ZodValidationPipe());
   app.useGlobalFilters(
     new ThrottlerExceptionFilter(),
